@@ -70,7 +70,8 @@ canvas{display:block;width:100vw;height:100vh}
   <div class="pane-header" data-pane="pCamera"><span>Camera</span><span class="arrow">&#9654;</span></div>
   <div class="pane-body" id="pCamera">
     <div class="section">Controls</div>
-    <label>Sensitivity <input type="range" id="rCamSens" min="0" max="10" step="0.1" value="3"><span class="val" id="vCamSens">3</span></label>
+    <label>Sensitivity <input type="range" id="rCamSens" min="0" max="10" step="0.1" value="2"><span class="val" id="vCamSens">2</span></label>
+    <label>Zoom sensitivity <input type="range" id="rZoomSens" min="0" max="10" step="0.1" value="3"><span class="val" id="vZoomSens">3</span></label>
     <div class="section">Rotation</div>
     <label>Spin speed <input type="range" id="rSpinSpeed" min="0" max="1" step="0.01" value="0"><span class="val" id="vSpinSpeed">0</span></label>
   </div>
@@ -147,10 +148,10 @@ const pnls='#sidebar';
 document.addEventListener('mousedown',e=>{if(e.target.closest(pnls))return;dragging=true;lastMX=e.clientX;lastMY=e.clientY;});
 document.addEventListener('mousemove',e=>{const dpr=Math.min(devicePixelRatio,1.5);mouseX=e.clientX*dpr;mouseY=(innerHeight-e.clientY)*dpr;if(!dragging)return;let dx=e.clientX-lastMX,dy=e.clientY-lastMY;if(e.shiftKey){velPanX=-dx*.005;velPanY=dy*.005}else{let s=gv('rCamSens')*.0002;velAz-=dx*s;velEl+=dy*s;}lastMX=e.clientX;lastMY=e.clientY;});
 document.addEventListener('mouseup',()=>dragging=false);
-document.addEventListener('wheel',e=>{if(e.target.closest(pnls))return;e.preventDefault();velZoom+=e.deltaY*.003;},{passive:false});
+document.addEventListener('wheel',e=>{if(e.target.closest(pnls))return;e.preventDefault();velZoom+=e.deltaY*gv('rZoomSens')*.0003;},{passive:false});
 let tch={};
 document.addEventListener('touchstart',e=>{if(e.target.closest(pnls))return;e.preventDefault();for(let t of e.changedTouches)tch[t.identifier]={x:t.clientX,y:t.clientY};},{passive:false});
-document.addEventListener('touchmove',e=>{if(e.target.closest(pnls))return;e.preventDefault();if(e.touches.length===1){let t=e.touches[0],p=tch[t.identifier];if(p){let s=gv('rCamSens')*.0002;velAz-=(t.clientX-p.x)*s;velEl+=(t.clientY-p.y)*s;}tch[t.identifier]={x:t.clientX,y:t.clientY};}else if(e.touches.length===2){let t0=e.touches[0],t1=e.touches[1],nd=Math.hypot(t1.clientX-t0.clientX,t1.clientY-t0.clientY),p0=tch[t0.identifier],p1=tch[t1.identifier];if(p0&&p1){let od=Math.hypot(p1.x-p0.x,p1.y-p0.y);velZoom-=(nd-od)*.006;}tch[t0.identifier]={x:t0.clientX,y:t0.clientY};tch[t1.identifier]={x:t1.clientX,y:t1.clientY};}},{passive:false});
+document.addEventListener('touchmove',e=>{if(e.target.closest(pnls))return;e.preventDefault();if(e.touches.length===1){let t=e.touches[0],p=tch[t.identifier];if(p){let s=gv('rCamSens')*.0002;velAz-=(t.clientX-p.x)*s;velEl+=(t.clientY-p.y)*s;}tch[t.identifier]={x:t.clientX,y:t.clientY};}else if(e.touches.length===2){let t0=e.touches[0],t1=e.touches[1],nd=Math.hypot(t1.clientX-t0.clientX,t1.clientY-t0.clientY),p0=tch[t0.identifier],p1=tch[t1.identifier];if(p0&&p1){let od=Math.hypot(p1.x-p0.x,p1.y-p0.y);velZoom-=(nd-od)*gv('rZoomSens')*.0006;}tch[t0.identifier]={x:t0.clientX,y:t0.clientY};tch[t1.identifier]={x:t1.clientX,y:t1.clientY};}},{passive:false});
 document.addEventListener('touchend',e=>{for(let t of e.changedTouches)delete tch[t.identifier];});
 
 const gl=canvas.getContext('webgl2',{antialias:false});gl.getExtension('EXT_color_buffer_float');
