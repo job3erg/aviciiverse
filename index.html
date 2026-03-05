@@ -63,14 +63,16 @@ canvas{display:block;width:100vw;height:100vh}
   <div class="pane-header" data-pane="pShape"><span>Shape</span><span class="arrow">&#9654;</span></div>
   <div class="pane-body" id="pShape">
     <div class="section">Annulus</div>
-    <label>Inner radius <input type="range" id="rInnerR" min="0" max="4" step="0.05" value="1.2"><span class="val" id="vInnerR">1.2</span></label>
-    <label>Outer radius <input type="range" id="rOuterR" min="0.5" max="5" step="0.05" value="2.8"><span class="val" id="vOuterR">2.8</span></label>
-    <label>Thickness <input type="range" id="rAnnThick" min="0.01" max="2" step="0.01" value="0.4"><span class="val" id="vAnnThick">0.4</span></label>
+    <label>Inner radius <input type="range" id="rInnerR" min="0" max="4" step="0.05" value="0.3"><span class="val" id="vInnerR">0.3</span></label>
+    <label>Outer radius <input type="range" id="rOuterR" min="0.5" max="5" step="0.05" value="1"><span class="val" id="vOuterR">1</span></label>
+    <label>Thickness <input type="range" id="rAnnThick" min="0.01" max="2" step="0.01" value="0.01"><span class="val" id="vAnnThick">0.01</span></label>
   </div>
   <div class="pane-header" data-pane="pCamera"><span>Camera</span><span class="arrow">&#9654;</span></div>
   <div class="pane-body" id="pCamera">
+    <div class="section">Controls</div>
+    <label>Sensitivity <input type="range" id="rCamSens" min="0" max="10" step="0.1" value="3"><span class="val" id="vCamSens">3</span></label>
     <div class="section">Rotation</div>
-    <label>Spin speed <input type="range" id="rSpinSpeed" min="0" max="1" step="0.01" value="0.35"><span class="val" id="vSpinSpeed">0.35</span></label>
+    <label>Spin speed <input type="range" id="rSpinSpeed" min="0" max="1" step="0.01" value="0"><span class="val" id="vSpinSpeed">0</span></label>
   </div>
   <div class="pane-header" data-pane="pNodes"><span>Nodes</span><span class="arrow">&#9654;</span></div>
   <div class="pane-body" id="pNodes">
@@ -94,6 +96,16 @@ canvas{display:block;width:100vw;height:100vh}
     <label>Ref distance <input type="range" id="rCardRefDist" min="1" max="15" step="0.5" value="6"><span class="val" id="vCardRefDist">6</span></label>
     <label>Min scale <input type="range" id="rCardMinScale" min="0.05" max="1" step="0.05" value="0.15"><span class="val" id="vCardMinScale">0.15</span></label>
     <label>Max scale <input type="range" id="rCardMaxScale" min="1" max="5" step="0.1" value="2.5"><span class="val" id="vCardMaxScale">2.5</span></label>
+  </div>
+  <div class="pane-header" data-pane="pFill"><span>Fill Points</span><span class="arrow">&#9654;</span></div>
+  <div class="pane-body" id="pFill">
+    <div class="section">Distribution</div>
+    <label>Count <input type="range" id="rFillCount" min="0" max="50000" step="500" value="6500"><span class="val" id="vFillCount">6500</span></label>
+    <div class="section">Appearance</div>
+    <label>Size <input type="range" id="rFillSize" min="0.1" max="5" step="0.05" value="0.7"><span class="val" id="vFillSize">0.7</span></label>
+    <label>Size variation <input type="range" id="rFillSizeVar" min="0" max="1" step="0.05" value="1"><span class="val" id="vFillSizeVar">1</span></label>
+    <label>Color <input type="color" id="cFillColor" value="#667799"></label>
+    <label>Opacity <input type="range" id="rFillOpacity" min="0" max="1" step="0.01" value="1"><span class="val" id="vFillOpacity">1</span></label>
   </div>
 </div>
 <div id="nodeCard">
@@ -125,21 +137,20 @@ while(V.length<NUM_SP)V.push(V[V.length-1]);
 if(V.length>NUM_SP)V.length=NUM_SP;
 const nodeData=V.map(v=>({date:v[0],venue:v[1],location:v[2],songs:pickSetlist(v[3],10+Math.floor(Math.random()*4))}));
 
-let zoom=-6,panX=0,panY=0,cam=[1,0,0,0,1,0,0,0,1],dragging=false,lastMX=0,lastMY=0,mouseX=0,mouseY=0;
-let velRotX=0,velRotY=0,velZoom=0,velPanX=0,velPanY=0;
+let zoom=-6,panX=0,panY=0,camAz=0,camEl=Math.PI/9,cam,dragging=false,lastMX=0,lastMY=0,mouseX=0,mouseY=0;
+let velAz=0,velEl=0,velZoom=0,velPanX=0,velPanY=0;
 const DAMP=.92,ZOOM_DAMP=.88,PAN_DAMP=.90;
-function m3mul(A,B){return[A[0]*B[0]+A[3]*B[1]+A[6]*B[2],A[1]*B[0]+A[4]*B[1]+A[7]*B[2],A[2]*B[0]+A[5]*B[1]+A[8]*B[2],A[0]*B[3]+A[3]*B[4]+A[6]*B[5],A[1]*B[3]+A[4]*B[4]+A[7]*B[5],A[2]*B[3]+A[5]*B[4]+A[8]*B[5],A[0]*B[6]+A[3]*B[7]+A[6]*B[8],A[1]*B[6]+A[4]*B[7]+A[7]*B[8],A[2]*B[6]+A[5]*B[7]+A[8]*B[8]];}
-function m3rot(ax,ay,az,a){let c=Math.cos(a),s=Math.sin(a),t=1-c;return[t*ax*ax+c,t*ax*ay+s*az,t*ax*az-s*ay,t*ax*ay-s*az,t*ay*ay+c,t*ay*az+s*ax,t*ax*az+s*ay,t*ay*az-s*ax,t*az*az+c];}
-function applyRot(dx,dy){let ry=m3rot(cam[3],cam[4],cam[5],dx),rx=m3rot(cam[0],cam[1],cam[2],dy);cam=m3mul(rx,m3mul(ry,cam));let f=[cam[6],cam[7],cam[8]],r=[cam[0],cam[1],cam[2]],u=[f[1]*r[2]-f[2]*r[1],f[2]*r[0]-f[0]*r[2],f[0]*r[1]-f[1]*r[0]],ul=Math.hypot(...u);u[0]/=ul;u[1]/=ul;u[2]/=ul;r=[u[1]*f[2]-u[2]*f[1],u[2]*f[0]-u[0]*f[2],u[0]*f[1]-u[1]*f[0]];let rl=Math.hypot(...r);r[0]/=rl;r[1]/=rl;r[2]/=rl;let fl=Math.hypot(...f);f[0]/=fl;f[1]/=fl;f[2]/=fl;cam=[r[0],r[1],r[2],u[0],u[1],u[2],f[0],f[1],f[2]];}
+function buildCam(az,el){let ca=Math.cos(az),sa=Math.sin(az),ce=Math.cos(el),se=Math.sin(el);return[ca,-sa,0,-se*sa,-se*ca,ce,-ce*sa,-ce*ca,-se];}
+cam=buildCam(camAz,camEl);
 const canvas=document.getElementById('c');
 const pnls='#sidebar';
 document.addEventListener('mousedown',e=>{if(e.target.closest(pnls))return;dragging=true;lastMX=e.clientX;lastMY=e.clientY;});
-document.addEventListener('mousemove',e=>{const dpr=Math.min(devicePixelRatio,1.5);mouseX=e.clientX*dpr;mouseY=(innerHeight-e.clientY)*dpr;if(!dragging)return;let dx=e.clientX-lastMX,dy=e.clientY-lastMY;if(e.shiftKey){velPanX=-dx*.005;velPanY=dy*.005}else{velRotX=dx*.005;velRotY=dy*.005;}lastMX=e.clientX;lastMY=e.clientY;});
+document.addEventListener('mousemove',e=>{const dpr=Math.min(devicePixelRatio,1.5);mouseX=e.clientX*dpr;mouseY=(innerHeight-e.clientY)*dpr;if(!dragging)return;let dx=e.clientX-lastMX,dy=e.clientY-lastMY;if(e.shiftKey){velPanX=-dx*.005;velPanY=dy*.005}else{let s=gv('rCamSens')*.0002;velAz-=dx*s;velEl+=dy*s;}lastMX=e.clientX;lastMY=e.clientY;});
 document.addEventListener('mouseup',()=>dragging=false);
 document.addEventListener('wheel',e=>{if(e.target.closest(pnls))return;e.preventDefault();velZoom+=e.deltaY*.003;},{passive:false});
 let tch={};
 document.addEventListener('touchstart',e=>{if(e.target.closest(pnls))return;e.preventDefault();for(let t of e.changedTouches)tch[t.identifier]={x:t.clientX,y:t.clientY};},{passive:false});
-document.addEventListener('touchmove',e=>{if(e.target.closest(pnls))return;e.preventDefault();if(e.touches.length===1){let t=e.touches[0],p=tch[t.identifier];if(p){velRotX=(t.clientX-p.x)*.005;velRotY=(t.clientY-p.y)*.005;}tch[t.identifier]={x:t.clientX,y:t.clientY};}else if(e.touches.length===2){let t0=e.touches[0],t1=e.touches[1],nd=Math.hypot(t1.clientX-t0.clientX,t1.clientY-t0.clientY),p0=tch[t0.identifier],p1=tch[t1.identifier];if(p0&&p1){let od=Math.hypot(p1.x-p0.x,p1.y-p0.y);velZoom-=(nd-od)*.006;}tch[t0.identifier]={x:t0.clientX,y:t0.clientY};tch[t1.identifier]={x:t1.clientX,y:t1.clientY};}},{passive:false});
+document.addEventListener('touchmove',e=>{if(e.target.closest(pnls))return;e.preventDefault();if(e.touches.length===1){let t=e.touches[0],p=tch[t.identifier];if(p){let s=gv('rCamSens')*.0002;velAz-=(t.clientX-p.x)*s;velEl+=(t.clientY-p.y)*s;}tch[t.identifier]={x:t.clientX,y:t.clientY};}else if(e.touches.length===2){let t0=e.touches[0],t1=e.touches[1],nd=Math.hypot(t1.clientX-t0.clientX,t1.clientY-t0.clientY),p0=tch[t0.identifier],p1=tch[t1.identifier];if(p0&&p1){let od=Math.hypot(p1.x-p0.x,p1.y-p0.y);velZoom-=(nd-od)*.006;}tch[t0.identifier]={x:t0.clientX,y:t0.clientY};tch[t1.identifier]={x:t1.clientX,y:t1.clientY};}},{passive:false});
 document.addEventListener('touchend',e=>{for(let t of e.changedTouches)delete tch[t.identifier];});
 
 const gl=canvas.getContext('webgl2',{antialias:false});gl.getExtension('EXT_color_buffer_float');
@@ -193,7 +204,7 @@ for(let i=0;i<NUM_SP;i++){
   sz[i]=3+Math.random()*3;br[i]=.8+Math.random()*.2;
 }return{pos,sz,br};}
 
-let curInner=1.2,curOuter=2.8,curThick=0.4;
+let curInner=0.3,curOuter=1,curThick=0.01;
 let sd=genNodes(curInner,curOuter,curThick);
 let spPos=sd.pos,spSz=sd.sz,spBr=sd.br;
 
@@ -250,6 +261,52 @@ const circleVAO=gl.createVertexArray();gl.bindVertexArray(circleVAO);
 let circlePosBuf=mkAttr(circleProg,spPos,'aPos',3);
 const crU={};['uCam','uSpin','uOrigin','uRes','uCircleSize','uFallNear','uFallFar','uOpNear','uOpFar','uCircleColor','uThickness'].forEach(n=>crU[n]=gl.getUniformLocation(circleProg,n));
 
+// --- Fill points ---
+const fillProg=link(`#version 300 es
+uniform mat3 uCam,uSpin;uniform vec3 uOrigin;uniform vec2 uRes;
+uniform float uFillSize,uFillOpacity;
+in vec3 aPos;in float aSize;out float vB,vD;
+void main(){vec3 s=uSpin*aPos,w=s-uOrigin;
+vec3 c=vec3(uCam[0][0]*w.x+uCam[0][1]*w.y+uCam[0][2]*w.z,uCam[1][0]*w.x+uCam[1][1]*w.y+uCam[1][2]*w.z,uCam[2][0]*w.x+uCam[2][1]*w.y+uCam[2][2]*w.z);
+if(c.z<.01){gl_Position=vec4(2);gl_PointSize=0.;return;}
+vec2 px=c.xy/c.z*uRes.y+.5*uRes,nd=px/uRes*2.-1.;
+gl_Position=vec4(nd,0,1);float d=length(w);
+gl_PointSize=clamp(aSize*uFillSize*uRes.y/(d*120.+1.),.3,20.);vB=uFillOpacity;vD=d;}`,
+`#version 300 es
+precision highp float;uniform vec3 uFillColor;
+in float vB,vD;out vec4 O;
+void main(){float r=length(gl_PointCoord-.5)*2.,a=1.-r*r;if(a<=0.)discard;
+float f=1./(1.+vD*.05);
+O=vec4(uFillColor*vB*f*a,1);}`);
+const fillVAO=gl.createVertexArray();gl.bindVertexArray(fillVAO);
+
+let fillCount=6500;
+function genFillPoints(count,innerR,outerR,thick){
+const pos=new Float32Array(count*3),sz=new Float32Array(count);
+const sizeVar=gv('rFillSizeVar');
+for(let i=0;i<count;i++){
+  let th=Math.random()*Math.PI*2;
+  let t=Math.sqrt(Math.random());
+  let r=innerR+(outerR-innerR)*t;
+  pos[i*3]=r*Math.cos(th);pos[i*3+1]=r*Math.sin(th);pos[i*3+2]=(Math.random()-.5)*2*thick;
+  sz[i]=1+sizeVar*(Math.random()-.5)*2;
+}return{pos,sz};}
+
+let fillData=genFillPoints(fillCount,curInner,curOuter,curThick);
+let fillPosBuf=mkAttr(fillProg,fillData.pos,'aPos',3);
+let fillSzBuf=mkAttr(fillProg,fillData.sz,'aSize',1);
+const flU={};['uCam','uSpin','uOrigin','uRes','uFillSize','uFillOpacity','uFillColor'].forEach(n=>flU[n]=gl.getUniformLocation(fillProg,n));
+
+function updateFillBuffers(){
+  fillCount=gv('rFillCount')|0;
+  fillData=genFillPoints(fillCount,curInner,curOuter,curThick);
+  gl.bindVertexArray(fillVAO);
+  gl.bindBuffer(gl.ARRAY_BUFFER,fillPosBuf);gl.bufferData(gl.ARRAY_BUFFER,fillData.pos,gl.STATIC_DRAW);
+  const l1=gl.getAttribLocation(fillProg,'aPos');if(l1>=0){gl.enableVertexAttribArray(l1);gl.vertexAttribPointer(l1,3,gl.FLOAT,false,0,0);}
+  gl.bindBuffer(gl.ARRAY_BUFFER,fillSzBuf);gl.bufferData(gl.ARRAY_BUFFER,fillData.sz,gl.STATIC_DRAW);
+  const l2=gl.getAttribLocation(fillProg,'aSize');if(l2>=0){gl.enableVertexAttribArray(l2);gl.vertexAttribPointer(l2,1,gl.FLOAT,false,0,0);}
+}
+
 function updateNodeBuffers(){
   sd=genNodes(curInner,curOuter,curThick);
   spPos=sd.pos;spSz=sd.sz;spBr=sd.br;
@@ -262,8 +319,11 @@ function updateNodeBuffers(){
 ['rInnerR','rOuterR','rAnnThick'].forEach(id=>{
   document.getElementById(id).addEventListener('input',()=>{
     curInner=gv('rInnerR');curOuter=gv('rOuterR');curThick=gv('rAnnThick');
-    updateNodeBuffers();
+    updateNodeBuffers();updateFillBuffers();
   });
+});
+['rFillCount','rFillSize','rFillSizeVar','rFillOpacity'].forEach(id=>{
+  document.getElementById(id).addEventListener('input',()=>updateFillBuffers());
 });
 
 const noiseTex=mkNoiseTex(),ditherTex=mkNoiseTex();
@@ -311,9 +371,10 @@ addEventListener('resize',resize);resize();
 
 function frame(){try{
 const t=performance.now()/1000-t0,W=canvas.width,H=canvas.height;
-if(!dragging){velRotX*=DAMP;velRotY*=DAMP;velPanX*=PAN_DAMP;velPanY*=PAN_DAMP;}
+if(!dragging){velAz*=DAMP;velEl*=DAMP;velPanX*=PAN_DAMP;velPanY*=PAN_DAMP;}
 velZoom*=ZOOM_DAMP;
-if(Math.abs(velRotX)>1e-5||Math.abs(velRotY)>1e-5)applyRot(velRotX,velRotY);
+camAz+=velAz;camEl+=velEl;camEl=Math.max(-1.5,Math.min(1.5,camEl));
+cam=buildCam(camAz,camEl);
 panX+=velPanX;panY+=velPanY;
 zoom+=velZoom;zoom=Math.max(-10,Math.min(-2,zoom));
 let ox=cam[0]*panX+cam[3]*panY+cam[6]*zoom,oy=cam[1]*panX+cam[4]*panY+cam[7]*zoom,oz=cam[2]*panX+cam[5]*panY+cam[8]*zoom;
@@ -329,6 +390,15 @@ let cd=gc('cDense'),ct=gc('cThin'),cc=gc('cCenter'),ce=gc('cEdge'),cs=gc('cStar'
 gl.uniform3f(nU.uColDense,...cd);gl.uniform3f(nU.uColThin,...ct);gl.uniform3f(nU.uColCenter,...cc);gl.uniform3f(nU.uColEdge,...ce);gl.uniform3f(nU.uColStar,...cs);gl.uniform3f(nU.uColLight,...cl);
 gl.uniform1f(nU.uCenterMul,gv('rCenterMul'));gl.uniform1f(nU.uEdgeMul,gv('rEdgeMul'));gl.uniform1f(nU.uStarBri,gv('rStarBri'));gl.uniform1f(nU.uBloom,gv('rBloom'));gl.uniform1f(nU.uBri,gv('rBri'));gl.uniform1f(nU.uOpacity,gv('rOpacity'));gl.uniform1f(nU.uRidge,gv('rRidge'));gl.uniform1f(nU.uSpiralStr,gv('rSpiral'));gl.uniform1f(nU.uFbmFreq,gv('rFbmFreq'));gl.uniform1f(nU.uFbmStr,gv('rFbmStr'));gl.uniform1f(nU.uSpinSpeed,ss);
 gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+
+gl.enable(gl.BLEND);gl.blendFunc(gl.ONE,gl.ONE);
+if(fillCount>0){
+gl.useProgram(fillProg);gl.bindVertexArray(fillVAO);
+gl.uniformMatrix3fv(flU.uCam,false,camF);gl.uniform3f(flU.uOrigin,ox,oy,oz);gl.uniform2f(flU.uRes,W,H);gl.uniformMatrix3fv(flU.uSpin,false,spinF);
+gl.uniform1f(flU.uFillSize,gv('rFillSize'));gl.uniform1f(flU.uFillOpacity,gv('rFillOpacity'));
+let fillCol=gc('cFillColor');gl.uniform3f(flU.uFillColor,...fillCol);
+gl.drawArrays(gl.POINTS,0,fillCount);
+}gl.disable(gl.BLEND);
 
 gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE);
 gl.useProgram(circleProg);gl.bindVertexArray(circleVAO);
