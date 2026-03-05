@@ -115,7 +115,7 @@ canvas{display:block;width:100vw;height:100vh}
   <div class="pane-body" id="pGraphics">
     <div class="section">Region circles</div>
     <label>Size <input type="range" id="rRegionSize" min="0.1" max="3" step="0.01" value="0.55"><span class="val" id="vRegionSize">0.55</span></label>
-    <label>Size variation <input type="range" id="rRegionSizeVar" min="0" max="3" step="0.01" value="3"><span class="val" id="vRegionSizeVar">3</span></label>
+    <label>Size variation <input type="range" id="rRegionSizeVar" min="0" max="3" step="0.01" value="1.7"><span class="val" id="vRegionSizeVar">1.7</span></label>
     <label>Opacity <input type="range" id="rRegionOpacity" min="0" max="1" step="0.01" value="0.73"><span class="val" id="vRegionOpacity">0.73</span></label>
     <label>Color <input type="color" id="cRegionColor" value="#4DCC66"></label>
     <div class="section">Region labels</div>
@@ -456,14 +456,17 @@ function computeRegionInfo(positions){
   }
 }
 
-// Get final radii using size/variation sliders (power curve for extreme variation)
+// Get final radii: size based on show count per region, variation exaggerates difference
 function getRegionRadii(){
   const sizeMul=gv('rRegionSize'),sizeVar=gv('rRegionSizeVar');
   const valid=regionInfo.filter(r=>r!==null);
   const avgRad=valid.reduce((s,r)=>s+r.naturalRad,0)/valid.length;
-  return regionInfo.map(r=>{
+  const validCounts=regionCounts.filter(c=>c>0);
+  const avgCount=validCounts.reduce((s,c)=>s+c,0)/validCounts.length;
+  return regionInfo.map((r,i)=>{
     if(!r)return 0;
-    return avgRad*Math.pow(r.naturalRad/avgRad,sizeVar)*sizeMul;
+    const countRatio=regionCounts[i]/avgCount;
+    return avgRad*Math.pow(countRatio,sizeVar)*sizeMul;
   });
 }
 
