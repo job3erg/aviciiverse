@@ -24,6 +24,97 @@ function pickSetlist(era, count) {
   return result;
 }
 
+// Geographic regions
+const REGIONS = [
+  { id: 0,  name: 'Scandinavia' },
+  { id: 1,  name: 'UK & Ireland' },
+  { id: 2,  name: 'Benelux' },
+  { id: 3,  name: 'Central Europe' },
+  { id: 4,  name: 'Southern Europe' },
+  { id: 5,  name: 'Ibiza' },
+  { id: 6,  name: 'USA East Coast' },
+  { id: 7,  name: 'USA West Coast' },
+  { id: 8,  name: 'Las Vegas' },
+  { id: 9,  name: 'USA South & Midwest' },
+  { id: 10, name: 'Canada' },
+  { id: 11, name: 'Rest of World' },
+];
+
+const LOCATION_REGION = {
+  // 0 - Scandinavia
+  'STOCKHOLM, SWEDEN': 0,
+  'GOTHENBURG, SWEDEN': 0,
+  'OSLO, NORWAY': 0,
+  'HELSINKI, FINLAND': 0,
+  'COPENHAGEN, DENMARK': 0,
+  'ODENSE, DENMARK': 0,
+  // 1 - UK & Ireland
+  'LONDON, UK': 1,
+  'DARESBURY, UK': 1,
+  'MANCHESTER, UK': 1,
+  'STRATFORD, UK': 1,
+  'BIRMINGHAM, UK': 1,
+  // 2 - Benelux
+  'BOOM, BELGIUM': 2,
+  'HASSELT, BELGIUM': 2,
+  'AMSTERDAM, NETHERLANDS': 2,
+  'BIDDINGHUIZEN, NETHERLANDS': 2,
+  'HAARLEMMERMEER, NETHERLANDS': 2,
+  'SPAARNWOUDE, NETHERLANDS': 2,
+  // 3 - Central Europe
+  'MUNICH, GERMANY': 3,
+  'ZURICH, SWITZERLAND': 3,
+  'FRANKFURT, GERMANY': 3,
+  'ZAMARDI, HUNGARY': 3,
+  // 4 - Southern Europe
+  'PORT-BARCARES, FRANCE': 4,
+  'LISBON, PORTUGAL': 4,
+  'NOVI SAD, SERBIA': 4,
+  'HEROUVILLE, FRANCE': 4,
+  // 5 - Ibiza
+  'IBIZA, SPAIN': 5,
+  // 6 - USA East Coast
+  'NEW YORK, NY, USA': 6,
+  'BROOKLYN, NY, USA': 6,
+  'WASHINGTON, DC, USA': 6,
+  'BOSTON, MA, USA': 6,
+  'PHILADELPHIA, PA, USA': 6,
+  'PROVIDENCE, RI, USA': 6,
+  'SCRANTON, PA, USA': 6,
+  'ATLANTA, GA, USA': 6,
+  // 7 - USA West Coast
+  'INDIO, CA, USA': 7,
+  'LOS ANGELES, CA, USA': 7,
+  'SAN BERNARDINO, CA, USA': 7,
+  'SANTA MONICA, CA, USA': 7,
+  'SAN FRANCISCO, CA, USA': 7,
+  'MOUNTAIN VIEW, CA, USA': 7,
+  'IRVINE, CA, USA': 7,
+  // 8 - Las Vegas
+  'LAS VEGAS, NV, USA': 8,
+  // 9 - USA South & Midwest
+  'MIAMI, FL, USA': 9,
+  'CHICAGO, IL, USA': 9,
+  'AUSTIN, TX, USA': 9,
+  'NEW ORLEANS, LA, USA': 9,
+  'HOUSTON, TX, USA': 9,
+  'DENVER, CO, USA': 9,
+  // 10 - Canada
+  'TORONTO, ON, CANADA': 10,
+  // 11 - Rest of World
+  'SYDNEY, AUSTRALIA': 11,
+  'MELBOURNE, AUSTRALIA': 11,
+  'BRISBANE, AUSTRALIA': 11,
+  'PERTH, AUSTRALIA': 11,
+  'ADELAIDE, AUSTRALIA': 11,
+  'AUCKLAND, NEW ZEALAND': 11,
+  'SINGAPORE': 11,
+  'TOKYO, JAPAN': 11,
+  'JAKARTA, INDONESIA': 11,
+  'RIO DE JANEIRO, BRAZIL': 11,
+  'RABAT, MOROCCO': 11,
+};
+
 // Each entry: [date, venue, location, era]
 const VENUES = [
   ["MAR 27 2010","WALL LOUNGE","MIAMI, FL, USA","e10"],["MAY 15 2010","PACHA","IBIZA, SPAIN","e10"],["JUN 25 2010","EDC LAS VEGAS","LAS VEGAS, NV, USA","e10"],["JUL 10 2010","PRIVILEGE","IBIZA, SPAIN","e10"],["AUG 7 2010","CREAMFIELDS","DARESBURY, UK","e10"],["SEP 4 2010","USHUAIA","IBIZA, SPAIN","e10"],["OCT 16 2010","AMNESIA","IBIZA, SPAIN","e10"],["DEC 31 2010","STORY","MIAMI, FL, USA","e10"],

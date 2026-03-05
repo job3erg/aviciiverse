@@ -31,6 +31,7 @@ canvas{display:block;width:100vw;height:100vh}
 #nodeCard .card-divider{width:60%;height:1px;background:rgba(255,255,255,.35);margin-bottom:10px}
 #nodeCard .card-songs{list-style:none;padding:0;margin:0}
 #nodeCard .card-songs li{font-size:9px;font-style:italic;color:rgba(255,255,255,.85);line-height:1.55;font-weight:400}
+.region-label{position:fixed;pointer-events:none;z-index:15;font-family:'Courier New',Courier,monospace;font-weight:bold;white-space:nowrap;text-shadow:0 0 6px rgba(77,204,102,.5),0 0 2px #000;transform:translate(-50%,-100%);letter-spacing:0.5px;text-transform:uppercase}
 </style>
 </head>
 <body>
@@ -108,7 +109,18 @@ canvas{display:block;width:100vw;height:100vh}
     <label>Color <input type="color" id="cFillColor" value="#667799"></label>
     <label>Opacity <input type="range" id="rFillOpacity" min="0" max="1" step="0.01" value="1"><span class="val" id="vFillOpacity">1</span></label>
   </div>
+  <div class="pane-header" data-pane="pGraphics"><span>Graphics</span><span class="arrow">&#9654;</span></div>
+  <div class="pane-body" id="pGraphics">
+    <div class="section">Region circles</div>
+    <label>Size <input type="range" id="rRegionSize" min="0.1" max="3" step="0.01" value="0.55"><span class="val" id="vRegionSize">0.55</span></label>
+    <label>Size variation <input type="range" id="rRegionSizeVar" min="0" max="3" step="0.01" value="3"><span class="val" id="vRegionSizeVar">3</span></label>
+    <label>Opacity <input type="range" id="rRegionOpacity" min="0" max="1" step="0.01" value="0.73"><span class="val" id="vRegionOpacity">0.73</span></label>
+    <label>Color <input type="color" id="cRegionColor" value="#4DCC66"></label>
+    <div class="section">Region labels</div>
+    <label>Font size <input type="range" id="rLabelSize" min="4" max="24" step="0.5" value="12.5"><span class="val" id="vLabelSize">12.5</span></label>
+  </div>
 </div>
+<div id="regionLabels"></div>
 <div id="nodeCard">
   <div class="card-inner">
     <div class="card-date" id="cardDate"></div>
@@ -136,7 +148,26 @@ const NUM_SP=NUM_SHOWS;
 const V=VENUES.slice();
 while(V.length<NUM_SP)V.push(V[V.length-1]);
 if(V.length>NUM_SP)V.length=NUM_SP;
-const nodeData=V.map(v=>({date:v[0],venue:v[1],location:v[2],songs:pickSetlist(v[3],10+Math.floor(Math.random()*4))}));
+
+// Assign region to each venue and sort by region
+const venueRegions=V.map(v=>LOCATION_REGION[v[2]]!=null?LOCATION_REGION[v[2]]:11);
+const sortIdx=[...Array(NUM_SP).keys()].sort((a,b)=>venueRegions[a]-venueRegions[b]);
+const Vs=sortIdx.map(i=>V[i]);
+const nodeData=Vs.map(v=>({date:v[0],venue:v[1],location:v[2],songs:pickSetlist(v[3],10+Math.floor(Math.random()*4))}));
+const nodeRegion=sortIdx.map(i=>venueRegions[i]);
+
+// Compute angular sectors per region
+const GAP=0.04,NUM_REGIONS=REGIONS.length;
+const regionCounts=new Array(NUM_REGIONS).fill(0);
+for(let i=0;i<NUM_SP;i++)regionCounts[nodeRegion[i]]++;
+const usedAngle=Math.PI*2-GAP*NUM_REGIONS;
+const regionStart=new Float64Array(NUM_REGIONS),regionWidth=new Float64Array(NUM_REGIONS);
+let angle=0;
+for(let r=0;r<NUM_REGIONS;r++){
+  regionStart[r]=angle;
+  regionWidth[r]=regionCounts[r]/NUM_SP*usedAngle;
+  angle+=regionWidth[r]+GAP;
+}
 
 let zoom=-6,panX=0,panY=0,camAz=0,camEl=Math.PI/9,cam,dragging=false,lastMX=0,lastMY=0,mouseX=0,mouseY=0;
 let velAz=0,velEl=0,velZoom=0,velPanX=0,velPanY=0;
@@ -145,8 +176,9 @@ function buildCam(az,el){let ca=Math.cos(az),sa=Math.sin(az),ce=Math.cos(el),se=
 cam=buildCam(camAz,camEl);
 const canvas=document.getElementById('c');
 const pnls='#sidebar';
-document.addEventListener('mousedown',e=>{if(e.target.closest(pnls))return;dragging=true;lastMX=e.clientX;lastMY=e.clientY;});
-document.addEventListener('mousemove',e=>{const dpr=Math.min(devicePixelRatio,1.5);mouseX=e.clientX*dpr;mouseY=(innerHeight-e.clientY)*dpr;if(!dragging)return;let dx=e.clientX-lastMX,dy=e.clientY-lastMY;if(e.shiftKey){velPanX=-dx*.005;velPanY=dy*.005}else{let s=gv('rCamSens')*.0002;velAz-=dx*s;velEl+=dy*s;}lastMX=e.clientX;lastMY=e.clientY;});
+let dragDist=0;
+document.addEventListener('mousedown',e=>{if(e.target.closest(pnls))return;dragging=true;dragDist=0;lastMX=e.clientX;lastMY=e.clientY;});
+document.addEventListener('mousemove',e=>{const dpr=Math.min(devicePixelRatio,1.5);mouseX=e.clientX*dpr;mouseY=(innerHeight-e.clientY)*dpr;if(!dragging)return;let dx=e.clientX-lastMX,dy=e.clientY-lastMY;dragDist+=Math.abs(dx)+Math.abs(dy);if(e.shiftKey){velPanX=-dx*.005;velPanY=dy*.005}else{let s=gv('rCamSens')*.0002;velAz-=dx*s;velEl+=dy*s;}lastMX=e.clientX;lastMY=e.clientY;});
 document.addEventListener('mouseup',()=>dragging=false);
 document.addEventListener('wheel',e=>{if(e.target.closest(pnls))return;e.preventDefault();velZoom+=e.deltaY*gv('rZoomSens')*.0003;},{passive:false});
 let tch={};
@@ -190,8 +222,14 @@ O=vec4(s.xyz,1);}`);
 const nebVAO=mkQVAO(nebProg);
 const nU={};['iResolution','iTime','iChannel0','iChannel2','uZoom','uPanX','uPanY','uCamMat','uColDense','uColThin','uColCenter','uColEdge','uColStar','uColLight','uCenterMul','uEdgeMul','uStarBri','uBloom','uBri','uOpacity','uRidge','uSpiralStr','uFbmFreq','uFbmStr','uSpinSpeed'].forEach(n=>nU[n]=gl.getUniformLocation(nebProg,n));
 
-// Store random seeds per node so we can regenerate deterministically
-const nodeSeeds=[];for(let i=0;i<NUM_SP;i++)nodeSeeds.push({th:Math.random()*Math.PI*2,y:(Math.random()-.5)*2});
+// Store random seeds per node — angle placed within the node's region sector
+const nodeSeeds=[];
+{const regIdx=new Array(NUM_REGIONS).fill(0);
+for(let i=0;i<NUM_SP;i++){
+  const r=nodeRegion[i],cnt=regionCounts[r],idx=regIdx[r]++;
+  const th=regionStart[r]+(idx+Math.random()*.8+.1)/cnt*regionWidth[r];
+  nodeSeeds.push({th,y:(Math.random()-.5)*2});
+}}
 
 function genNodes(innerR,outerR,thick){
 const pos=new Float32Array(NUM_SP*3),sz=new Float32Array(NUM_SP),br=new Float32Array(NUM_SP);
@@ -213,28 +251,30 @@ function mkAttr(prog,data,name,sz){const b=gl.createBuffer();gl.bindBuffer(gl.AR
 
 const nodeProg=link(`#version 300 es
 uniform mat3 uCam,uSpin;uniform vec3 uOrigin;uniform vec2 uRes;
-uniform vec2 uMouse;uniform float uHoverRadius,uNodeSize,uNodeHoverSize;
-in vec3 aPos;in float aSize,aBright;out float vB,vD,vHover;
-void main(){vec3 s=uSpin*aPos,w=s-uOrigin;
+uniform float uNodeSize;
+in vec3 aPos;in float aSize,aBright,aAnim;out float vB,vD,vAnim;
+void main(){vec3 p=aPos;p.z+=aAnim*0.25;
+vec3 s=uSpin*p,w=s-uOrigin;
 vec3 c=vec3(uCam[0][0]*w.x+uCam[0][1]*w.y+uCam[0][2]*w.z,uCam[1][0]*w.x+uCam[1][1]*w.y+uCam[1][2]*w.z,uCam[2][0]*w.x+uCam[2][1]*w.y+uCam[2][2]*w.z);
 if(c.z<.01){gl_Position=vec4(2);gl_PointSize=0.;return;}
 vec2 px=c.xy/c.z*uRes.y+.5*uRes,nd=px/uRes*2.-1.;
 gl_Position=vec4(nd,0,1);float d=length(w);
-vHover=smoothstep(uHoverRadius,uHoverRadius*.3,length(px-uMouse));
-float grow=1.+vHover*(uNodeHoverSize-1.);
-gl_PointSize=clamp(aSize*uNodeSize*grow*uRes.y/(d*120.+1.),.5,40.);vB=aBright;vD=d;}`,
+float grow=1.+aAnim*2.5;
+gl_PointSize=clamp(aSize*uNodeSize*grow*uRes.y/(d*120.+1.),.5,60.);vB=aBright;vD=d;vAnim=aAnim;}`,
 `#version 300 es
-precision highp float;uniform vec3 uNodeColor,uNodeHoverColor;
-in float vB,vD,vHover;out vec4 O;
+precision highp float;uniform vec3 uNodeColor;
+in float vB,vD,vAnim;out vec4 O;
 void main(){float r=length(gl_PointCoord-.5)*2.,a=1.-r*r;if(a<=0.)discard;
-float f=1./(1.+vD*.05),glow=1.+vHover*8.,soft=mix(a,sqrt(max(a,0.)),vHover);
-float b=vB*f*soft*glow;vec3 col=mix(uNodeColor,uNodeHoverColor,vHover);
+float f=1./(1.+vD*.05),glow=1.+vAnim*8.,soft=mix(a,sqrt(max(a,0.)),vAnim);
+float b=vB*f*soft*glow;vec3 col=mix(uNodeColor,vec3(1),vAnim*.7);
 O=vec4(col*b,1);}`);
+const nodeAnim=new Float32Array(NUM_SP); // per-node animation 0-1
 const nodeVAO=gl.createVertexArray();gl.bindVertexArray(nodeVAO);
 let nodePosBuf=mkAttr(nodeProg,spPos,'aPos',3);
 let nodeSzBuf=mkAttr(nodeProg,spSz,'aSize',1);
 let nodeBrBuf=mkAttr(nodeProg,spBr,'aBright',1);
-const ndU={};['uCam','uSpin','uOrigin','uRes','uMouse','uHoverRadius','uNodeSize','uNodeHoverSize','uNodeColor','uNodeHoverColor'].forEach(n=>ndU[n]=gl.getUniformLocation(nodeProg,n));
+let nodeAnimBuf=mkAttr(nodeProg,nodeAnim,'aAnim',1);
+const ndU={};['uCam','uSpin','uOrigin','uRes','uNodeSize','uNodeColor'].forEach(n=>ndU[n]=gl.getUniformLocation(nodeProg,n));
 
 const circleProg=link(`#version 300 es
 uniform mat3 uCam,uSpin;uniform vec3 uOrigin;uniform vec2 uRes;
@@ -308,13 +348,141 @@ function updateFillBuffers(){
   const l2=gl.getAttribLocation(fillProg,'aSize');if(l2>=0){gl.enableVertexAttribArray(l2);gl.vertexAttribPointer(l2,1,gl.FLOAT,false,0,0);}
 }
 
+// Region circle shader
+const regionProg=link(`#version 300 es
+uniform mat3 uCam,uSpin;uniform vec3 uOrigin;uniform vec2 uRes;
+in vec3 aPos;out float vD;
+void main(){vec3 s=uSpin*aPos,w=s-uOrigin;
+vec3 c=vec3(uCam[0][0]*w.x+uCam[0][1]*w.y+uCam[0][2]*w.z,uCam[1][0]*w.x+uCam[1][1]*w.y+uCam[1][2]*w.z,uCam[2][0]*w.x+uCam[2][1]*w.y+uCam[2][2]*w.z);
+if(c.z<.01){gl_Position=vec4(2);return;}
+vec2 px=c.xy/c.z*uRes.y+.5*uRes,nd=px/uRes*2.-1.;
+gl_Position=vec4(nd,0,1);vD=length(w);}`,
+`#version 300 es
+precision highp float;uniform vec3 uColor;uniform float uOpacity;
+in float vD;out vec4 O;
+void main(){float fade=1./(1.+vD*.05);O=vec4(uColor*uOpacity*fade,uOpacity*fade);}`);
+const regionVAO=gl.createVertexArray();gl.bindVertexArray(regionVAO);
+const CIRCLE_SEGS=128;
+let regionVertCount=0;
+let regionInfo=[];
+
+// Compute centroids and natural radii from unscaled node positions
+function computeRegionInfo(positions){
+  regionInfo=[];
+  for(let r=0;r<NUM_REGIONS;r++){
+    let cx=0,cy=0,cnt=0;
+    for(let i=0;i<NUM_SP;i++){
+      if(nodeRegion[i]===r){cx+=positions[i*3];cy+=positions[i*3+1];cnt++;}
+    }
+    if(cnt===0){regionInfo.push(null);continue;}
+    cx/=cnt;cy/=cnt;
+    let maxD=0;
+    for(let i=0;i<NUM_SP;i++){
+      if(nodeRegion[i]===r){
+        let dx=positions[i*3]-cx,dy=positions[i*3+1]-cy;
+        maxD=Math.max(maxD,Math.sqrt(dx*dx+dy*dy));
+      }
+    }
+    regionInfo.push({cx,cy,naturalRad:maxD+0.02});
+  }
+}
+
+// Get final radii using size/variation sliders (power curve for extreme variation)
+function getRegionRadii(){
+  const sizeMul=gv('rRegionSize'),sizeVar=gv('rRegionSizeVar');
+  const valid=regionInfo.filter(r=>r!==null);
+  const avgRad=valid.reduce((s,r)=>s+r.naturalRad,0)/valid.length;
+  return regionInfo.map(r=>{
+    if(!r)return 0;
+    return avgRad*Math.pow(r.naturalRad/avgRad,sizeVar)*sizeMul;
+  });
+}
+
+// Scale node positions so they fit within the adjusted circles
+function scaleNodesToRegions(positions){
+  const radii=getRegionRadii();
+  for(let i=0;i<NUM_SP;i++){
+    const r=nodeRegion[i],info=regionInfo[r];
+    if(!info||info.naturalRad<1e-6)continue;
+    const scale=radii[r]/info.naturalRad;
+    positions[i*3]=info.cx+(positions[i*3]-info.cx)*scale;
+    positions[i*3+1]=info.cy+(positions[i*3+1]-info.cy)*scale;
+  }
+}
+
+// Generate circle line geometry from regionInfo + final radii
+function genRegionCircles(){
+  const radii=getRegionRadii();
+  const verts=[];
+  for(let r=0;r<NUM_REGIONS;r++){
+    const info=regionInfo[r];if(!info)continue;
+    const rad=radii[r];
+    for(let s=0;s<CIRCLE_SEGS;s++){
+      const a0=s/CIRCLE_SEGS*Math.PI*2,a1=(s+1)/CIRCLE_SEGS*Math.PI*2;
+      verts.push(info.cx+rad*Math.cos(a0),info.cy+rad*Math.sin(a0),0);
+      verts.push(info.cx+rad*Math.cos(a1),info.cy+rad*Math.sin(a1),0);
+    }
+  }
+  regionVertCount=verts.length/3;
+  return new Float32Array(verts);
+}
+
+// Keep a copy of natural (unscaled) positions for re-scaling
+let naturalPos=new Float32Array(spPos);
+
+// Initial setup: compute info from natural positions, then scale
+computeRegionInfo(naturalPos);
+scaleNodesToRegions(spPos);
+let regionVerts=genRegionCircles();
+let regionPosBuf=mkAttr(regionProg,regionVerts,'aPos',3);
+const rgU={};['uCam','uSpin','uOrigin','uRes','uColor','uOpacity'].forEach(n=>rgU[n]=gl.getUniformLocation(regionProg,n));
+
+// Hover fill disc (reuses regionProg, TRIANGLE_FAN geometry)
+const hoverFillVAO=gl.createVertexArray();gl.bindVertexArray(hoverFillVAO);
+const FILL_SEGS=64;
+const hoverFillBuf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,hoverFillBuf);
+gl.bufferData(gl.ARRAY_BUFFER,new Float32Array((FILL_SEGS+2)*3),gl.DYNAMIC_DRAW);
+const hfL=gl.getAttribLocation(regionProg,'aPos');
+if(hfL>=0){gl.enableVertexAttribArray(hfL);gl.vertexAttribPointer(hfL,3,gl.FLOAT,false,0,0);}
+
+function genHoverFillDisc(cx,cy,rad){
+  const v=new Float32Array((FILL_SEGS+2)*3);
+  v[0]=cx;v[1]=cy;v[2]=0; // center
+  for(let i=0;i<=FILL_SEGS;i++){
+    const a=i/FILL_SEGS*Math.PI*2;
+    v[(i+1)*3]=cx+rad*Math.cos(a);
+    v[(i+1)*3+1]=cy+rad*Math.sin(a);
+    v[(i+1)*3+2]=0;
+  }
+  return v;
+}
+
+// Update region circles + scale node positions to match (from natural positions)
+function updateRegionAndNodes(){
+  spPos.set(naturalPos); // restore natural positions
+  scaleNodesToRegions(spPos);
+  regionVerts=genRegionCircles();
+  gl.bindBuffer(gl.ARRAY_BUFFER,regionPosBuf);
+  gl.bufferData(gl.ARRAY_BUFFER,regionVerts,gl.STATIC_DRAW);
+  gl.bindBuffer(gl.ARRAY_BUFFER,nodePosBuf);
+  gl.bufferData(gl.ARRAY_BUFFER,spPos,gl.STATIC_DRAW);
+  gl.bindBuffer(gl.ARRAY_BUFFER,circlePosBuf);
+  gl.bufferData(gl.ARRAY_BUFFER,spPos,gl.STATIC_DRAW);
+}
+
 function updateNodeBuffers(){
   sd=genNodes(curInner,curOuter,curThick);
   spPos=sd.pos;spSz=sd.sz;spBr=sd.br;
+  naturalPos=new Float32Array(spPos); // store natural positions
+  computeRegionInfo(naturalPos);
+  scaleNodesToRegions(spPos);
   gl.bindBuffer(gl.ARRAY_BUFFER,nodePosBuf);gl.bufferData(gl.ARRAY_BUFFER,spPos,gl.STATIC_DRAW);
   gl.bindBuffer(gl.ARRAY_BUFFER,nodeSzBuf);gl.bufferData(gl.ARRAY_BUFFER,spSz,gl.STATIC_DRAW);
   gl.bindBuffer(gl.ARRAY_BUFFER,nodeBrBuf);gl.bufferData(gl.ARRAY_BUFFER,spBr,gl.STATIC_DRAW);
   gl.bindBuffer(gl.ARRAY_BUFFER,circlePosBuf);gl.bufferData(gl.ARRAY_BUFFER,spPos,gl.STATIC_DRAW);
+  regionVerts=genRegionCircles();
+  gl.bindBuffer(gl.ARRAY_BUFFER,regionPosBuf);
+  gl.bufferData(gl.ARRAY_BUFFER,regionVerts,gl.STATIC_DRAW);
 }
 
 ['rInnerR','rOuterR','rAnnThick'].forEach(id=>{
@@ -325,6 +493,9 @@ function updateNodeBuffers(){
 });
 ['rFillCount','rFillSize','rFillSizeVar','rFillOpacity'].forEach(id=>{
   document.getElementById(id).addEventListener('input',()=>updateFillBuffers());
+});
+['rRegionSize','rRegionSizeVar'].forEach(id=>{
+  document.getElementById(id).addEventListener('input',()=>updateRegionAndNodes());
 });
 
 const noiseTex=mkNoiseTex(),ditherTex=mkNoiseTex();
@@ -348,21 +519,75 @@ function projectNode(i,camF,spinF,ox,oy,oz,W,H){
   if(cz<.01)return null;
   return{sx:cx/cz*H+.5*W,sy:cy/cz*H+.5*H,d:Math.hypot(wx,wy,wz)};
 }
-function updateCard(camF,spinF,ox,oy,oz,W,H){
-  const dpr=Math.min(devicePixelRatio,1.5),hr=gv('rHoverRadius')*dpr;
-  let best=-1,bestDist=1e9,bestSx=0,bestSy=0,bestD=1;
-  for(let i=0;i<NUM_SP;i++){let p=projectNode(i,camF,spinF,ox,oy,oz,W,H);if(!p)continue;let sd=Math.hypot(p.sx-mouseX,p.sy-mouseY);if(sd<hr&&sd<bestDist){bestDist=sd;best=i;bestSx=p.sx;bestSy=p.sy;bestD=p.d;}}
-  if(best>=0&&best<nodeData.length){
-    activeNode=best;let d=nodeData[best];
-    cardDate.textContent=d.date;cardVenue.innerHTML=d.venue.replace(/\n/g,'<br>');cardLocation.innerHTML=d.location.replace(/\n/g,'<br>');
-    cardSongs.innerHTML=d.songs.map(s=>'<li>'+s+'</li>').join('');
-    let cardScale=gv('rCardScale'),refDist=gv('rCardRefDist'),minS=gv('rCardMinScale'),maxS=gv('rCardMaxScale');
-    let depthScale=cardScale*refDist/Math.max(bestD,.5);depthScale=Math.max(minS,Math.min(depthScale,maxS));
-    cardEl.style.left=bestSx/dpr+'px';cardEl.style.top=(innerHeight-bestSy/dpr)+'px';
-    cardEl.style.transform='scale('+depthScale.toFixed(3)+')';cardEl.classList.add('visible');
-  } else {
-    if(cardEl.classList.contains('visible')){cardEl.style.transform='scale(0)';cardEl.classList.remove('visible');}
-    activeNode=-1;
+// Node hover disabled for now
+function updateCard(){activeNode=-1;if(cardEl.classList.contains('visible')){cardEl.style.transform='scale(0)';cardEl.classList.remove('visible');}}
+
+// Region selection + hover
+let hoveredRegion=-1,selectedRegion=-1;
+document.addEventListener('click',e=>{
+  if(e.target.closest(pnls)||dragDist>5)return;
+  if(hoveredRegion>=0){selectedRegion=selectedRegion===hoveredRegion?-1:hoveredRegion;}
+  else{selectedRegion=-1;}
+});
+function updateRegionHover(camF,spinF,ox,oy,oz,W,H){
+  const dpr=Math.min(devicePixelRatio,1.5);
+  const radii=getRegionRadii();
+  hoveredRegion=-1;
+  let bestDist=1e9;
+  for(let r=0;r<NUM_REGIONS;r++){
+    const info=regionInfo[r];if(!info)continue;
+    // Project region center to screen
+    const p=projectPoint(info.cx,info.cy,0,camF,spinF,ox,oy,oz,H,W);
+    if(!p)continue;
+    // Project a point at the circle edge to get screen-space radius
+    const pe=projectPoint(info.cx+radii[r],info.cy,0,camF,spinF,ox,oy,oz,H,W);
+    if(!pe)continue;
+    const screenRad=Math.hypot(pe.sx-p.sx,pe.sy-p.sy);
+    const md=Math.hypot(p.sx-mouseX,p.sy-mouseY);
+    if(md<screenRad&&md<bestDist){bestDist=md;hoveredRegion=r;}
+  }
+}
+
+// Region labels - HTML elements that billboard around Y axis
+const labelContainer=document.getElementById('regionLabels');
+const regionLabelEls=[];
+for(let r=0;r<NUM_REGIONS;r++){
+  const el=document.createElement('div');
+  el.className='region-label';
+  el.textContent=REGIONS[r].name;
+  labelContainer.appendChild(el);
+  regionLabelEls.push(el);
+}
+
+function projectPoint(x,y,z,camF,spinF,ox,oy,oz,H,W){
+  let sx=spinF[0]*x+spinF[3]*y+spinF[6]*z,sy=spinF[1]*x+spinF[4]*y+spinF[7]*z,sz=spinF[2]*x+spinF[5]*y+spinF[8]*z;
+  let wx=sx-ox,wy=sy-oy,wz=sz-oz;
+  let cx=camF[0]*wx+camF[1]*wy+camF[2]*wz,cy=camF[3]*wx+camF[4]*wy+camF[5]*wz,cz=camF[6]*wx+camF[7]*wy+camF[8]*wz;
+  if(cz<.01)return null;
+  return{sx:cx/cz*H+.5*W,sy:cy/cz*H+.5*H,d:Math.hypot(wx,wy,wz)};
+}
+
+function updateRegionLabels(camF,spinF,ox,oy,oz,W,H){
+  const dpr=Math.min(devicePixelRatio,1.5);
+  const fontSize=gv('rLabelSize');
+  const radii=getRegionRadii();
+  const labelColor=document.getElementById('cRegionColor').value;
+  for(let r=0;r<NUM_REGIONS;r++){
+    const el=regionLabelEls[r];
+    const info=regionInfo[r];
+    if(!info){el.style.display='none';continue;}
+    // Label sits above the circle center, offset in Z (disc normal)
+    const labelZ=radii[r]*0.15+0.03;
+    const p=projectPoint(info.cx,info.cy,labelZ,camF,spinF,ox,oy,oz,H,W);
+    if(!p){el.style.display='none';continue;}
+    el.style.display='';
+    el.style.fontSize=fontSize+'px';
+    el.style.color=labelColor;
+    const scale=1/(1+p.d*0.08);
+    el.style.left=(p.sx/dpr)+'px';
+    el.style.top=(innerHeight-p.sy/dpr)+'px';
+    el.style.opacity=Math.min(1,scale*1.5).toFixed(2);
+    el.style.transform='translate(-50%,-100%) scale('+scale.toFixed(3)+')';
   }
 }
 
@@ -381,6 +606,18 @@ zoom+=velZoom;zoom=Math.max(-10,Math.min(-2,zoom));
 let ox=cam[0]*panX+cam[3]*panY+cam[6]*zoom,oy=cam[1]*panX+cam[4]*panY+cam[7]*zoom,oz=cam[2]*panX+cam[5]*panY+cam[8]*zoom;
 let sr=gv('rSpinSpeed'),ss=sr*sr*.2,sa=t*ss,csa=Math.cos(sa),sna=Math.sin(sa),spin=[csa,0,-sna,0,1,0,sna,0,csa];
 const camF=new Float32Array(cam),spinF=new Float32Array(spin);
+updateRegionHover(camF,spinF,ox,oy,oz,W,H);
+// Animate node rise/glow for selected region
+{let dirty=false;
+for(let i=0;i<NUM_SP;i++){
+  const tgt=nodeRegion[i]===selectedRegion?1:0;
+  const prev=nodeAnim[i];
+  nodeAnim[i]+=(tgt-nodeAnim[i])*.08;
+  if(Math.abs(nodeAnim[i])<.001)nodeAnim[i]=0;
+  if(nodeAnim[i]!==prev)dirty=true;
+}
+if(dirty){gl.bindBuffer(gl.ARRAY_BUFFER,nodeAnimBuf);gl.bufferData(gl.ARRAY_BUFFER,nodeAnim,gl.DYNAMIC_DRAW);}
+}
 gl.disable(gl.BLEND);gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.viewport(0,0,W,H);
 gl.useProgram(nebProg);gl.bindVertexArray(nebVAO);
 gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,noiseTex);gl.uniform1i(nU.iChannel0,0);
@@ -399,7 +636,29 @@ gl.uniformMatrix3fv(flU.uCam,false,camF);gl.uniform3f(flU.uOrigin,ox,oy,oz);gl.u
 gl.uniform1f(flU.uFillSize,gv('rFillSize'));gl.uniform1f(flU.uFillOpacity,gv('rFillOpacity'));
 let fillCol=gc('cFillColor');gl.uniform3f(flU.uFillColor,...fillCol);
 gl.drawArrays(gl.POINTS,0,fillCount);
-}gl.disable(gl.BLEND);
+}
+// Region circles
+gl.blendFunc(gl.SRC_ALPHA,gl.ONE);
+if(regionVertCount>0){
+gl.useProgram(regionProg);gl.bindVertexArray(regionVAO);
+gl.uniformMatrix3fv(rgU.uCam,false,camF);gl.uniform3f(rgU.uOrigin,ox,oy,oz);gl.uniform2f(rgU.uRes,W,H);gl.uniformMatrix3fv(rgU.uSpin,false,spinF);
+let regCol=gc('cRegionColor');gl.uniform3f(rgU.uColor,...regCol);gl.uniform1f(rgU.uOpacity,gv('rRegionOpacity'));
+gl.drawArrays(gl.LINES,0,regionVertCount);
+// Fill disc for selected region (strong) and/or hovered region (subtle)
+const radii=getRegionRadii();
+function drawFillDisc(r,opacity){
+  const info=regionInfo[r];if(!info)return;
+  const discVerts=genHoverFillDisc(info.cx,info.cy,radii[r]);
+  gl.bindVertexArray(hoverFillVAO);
+  gl.bindBuffer(gl.ARRAY_BUFFER,hoverFillBuf);
+  gl.bufferData(gl.ARRAY_BUFFER,discVerts,gl.DYNAMIC_DRAW);
+  gl.uniform1f(rgU.uOpacity,opacity);
+  gl.drawArrays(gl.TRIANGLE_FAN,0,FILL_SEGS+2);
+}
+if(selectedRegion>=0)drawFillDisc(selectedRegion,0.7);
+if(hoveredRegion>=0&&hoveredRegion!==selectedRegion)drawFillDisc(hoveredRegion,0.4);
+}
+gl.disable(gl.BLEND);
 
 gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE);
 gl.useProgram(circleProg);gl.bindVertexArray(circleVAO);
@@ -417,12 +676,12 @@ gl.drawArrays(gl.POINTS,0,NUM_SP);gl.disable(gl.BLEND);
 gl.enable(gl.BLEND);gl.blendFunc(gl.ONE,gl.ONE);
 gl.useProgram(nodeProg);gl.bindVertexArray(nodeVAO);
 gl.uniformMatrix3fv(ndU.uCam,false,camF);gl.uniform3f(ndU.uOrigin,ox,oy,oz);gl.uniform2f(ndU.uRes,W,H);gl.uniformMatrix3fv(ndU.uSpin,false,spinF);
-gl.uniform2f(ndU.uMouse,mouseX,mouseY);gl.uniform1f(ndU.uHoverRadius,gv('rHoverRadius')*Math.min(devicePixelRatio,1.5));
-gl.uniform1f(ndU.uNodeSize,gv('rNodeSize'));gl.uniform1f(ndU.uNodeHoverSize,gv('rNodeHoverSize'));
-let nodeCol=gc('cNodeColor'),hoverCol=gc('cNodeHoverColor');
-gl.uniform3f(ndU.uNodeColor,...nodeCol);gl.uniform3f(ndU.uNodeHoverColor,...hoverCol);
+gl.uniform1f(ndU.uNodeSize,gv('rNodeSize'));
+let nodeCol=gc('cNodeColor');
+gl.uniform3f(ndU.uNodeColor,...nodeCol);
 gl.drawArrays(gl.POINTS,0,NUM_SP);gl.disable(gl.BLEND);
-updateCard(camF,spinF,ox,oy,oz,W,H);
+updateCard();
+updateRegionLabels(camF,spinF,ox,oy,oz,W,H);
 }catch(e){}
 requestAnimationFrame(frame);}
 frame();
