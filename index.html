@@ -39,28 +39,19 @@ canvas{display:block;width:100vw;height:100vh}
 <body>
 <canvas id="c"></canvas>
 <div id="sidebar">
-  <div class="pane-header" data-pane="pNebula"><span>Nebula</span><span class="arrow">&#9654;</span></div>
+  <div class="pane-header" data-pane="pNebula"><span>Energy beam</span><span class="arrow">&#9654;</span></div>
   <div class="pane-body" id="pNebula">
-    <div class="section">Surface</div>
-    <label>Dense <input type="color" id="cDense" value="#888899"></label>
-    <label>Thin <input type="color" id="cThin" value="#aaaabb"></label>
-    <div class="section">Illumination</div>
-    <label>Center <input type="color" id="cCenter" value="#ccffff"></label>
-    <label>Center mul <input type="range" id="rCenterMul" min="0" max="15" step="0.1" value="7"><span class="val" id="vCenterMul">7</span></label>
-    <label>Edge <input type="color" id="cEdge" value="#7a8780"></label>
-    <label>Edge mul <input type="range" id="rEdgeMul" min="0" max="5" step="0.1" value="0"><span class="val" id="vEdgeMul">0</span></label>
     <div class="section">Point Light</div>
     <label>Star color <input type="color" id="cStar" value="#7788cc"></label>
     <label>Star brightness <input type="range" id="rStarBri" min="0" max="5" step="0.05" value="0"><span class="val" id="vStarBri">0</span></label>
     <label>Light color <input type="color" id="cLight" value="#5588bb"></label>
-    <label>Bloom strength <input type="range" id="rBloom" min="0" max="5" step="0.05" value="1.55"><span class="val" id="vBloom">1.55</span></label>
-    <div class="section">Detail</div>
-    <label>Ridged <input type="range" id="rRidge" min="0" max="3" step="0.01" value="1.8"><span class="val" id="vRidge">1.8</span></label>
-    <label>Spiral strength <input type="range" id="rSpiral" min="0" max="6" step="0.1" value="6"><span class="val" id="vSpiral">6</span></label>
-    <label>FBM frequency <input type="range" id="rFbmFreq" min="10" max="150" step="1" value="10"><span class="val" id="vFbmFreq">10</span></label>
-    <label>FBM strength <input type="range" id="rFbmStr" min="0" max="3" step="0.05" value="0.2"><span class="val" id="vFbmStr">0.2</span></label>
+    <label>Bloom strength <input type="range" id="rBloom" min="0" max="5" step="0.05" value="3.45"><span class="val" id="vBloom">3.45</span></label>
+    <div class="section">Beam</div>
+    <label>Radius <input type="range" id="rBeamRad" min="0" max="2" step="0.01" value="0"><span class="val" id="vBeamRad">0</span></label>
+    <label>Height <input type="range" id="rBeamH" min="0" max="5" step="0.1" value="5"><span class="val" id="vBeamH">5</span></label>
+    <label>Dissolve <input type="range" id="rBeamDensity" min="0" max="2" step="0.05" value="2"><span class="val" id="vBeamDensity">2</span></label>
     <div class="section">Tone</div>
-    <label>Brightness <input type="range" id="rBri" min="0.1" max="1.5" step="0.01" value="0.6"><span class="val" id="vBri">0.6</span></label>
+    <label>Brightness <input type="range" id="rBri" min="0.1" max="1.5" step="0.01" value="0.13"><span class="val" id="vBri">0.13</span></label>
     <label>Opacity <input type="range" id="rOpacity" min="0.05" max="1" step="0.01" value="1"><span class="val" id="vOpacity">1</span></label>
   </div>
   <div class="pane-header" data-pane="pShape"><span>Shape</span><span class="arrow">&#9654;</span></div>
@@ -229,8 +220,11 @@ in vec2 p;void main(){gl_Position=vec4(p,0,1);}`,
 precision highp float;
 uniform vec2 iResolution;uniform float iTime;uniform sampler2D iChannel0,iChannel2;
 uniform float uZoom,uPanX,uPanY;uniform mat3 uCamMat;
-uniform vec3 uColDense,uColThin,uColCenter,uColEdge,uColStar,uColLight;
-uniform float uCenterMul,uEdgeMul,uStarBri,uBloom,uBri,uOpacity,uRidge,uSpiralStr,uFbmFreq,uFbmStr,uSpinSpeed;
+uniform vec3 uColStar,uColLight;
+uniform float uStarBri,uBloom,uBri,uOpacity,uSpinSpeed;
+uniform float uBeamRad,uBeamH,uBeamDensity;
+const vec3 cDense=vec3(.53,.53,.6),cThin=vec3(.67,.67,.73),cCenter=vec3(.8,1.,1.),cEdge=vec3(.48,.53,.5);
+const float cCenterMul=7.,cEdgeMul=0.,cRidge=1.97,cSpiralStr=3.5,cFbmFreq=75.,cFbmStr=1.3;
 out vec4 O;
 mat2 R(float a){float c=cos(a),s=sin(a);return mat2(c,-s,s,c);}
 float N(vec3 x){vec3 p=floor(x),f=fract(x);f=f*f*(3.-2.*f);vec2 u=(p.xy+vec2(37,17)*p.z)+f.xy;vec2 r=texture(iChannel0,(u+.5)/256.).yx;return 1.-.82*mix(r.x,r.y,f.z);}
@@ -239,18 +233,26 @@ float l2(vec2 p){return sqrt(p.x*p.x+p.y*p.y);}
 float l8(vec2 p){p=p*p;p=p*p;p=p*p;return pow(p.x+p.y,1./8.);}
 float D(vec3 p,vec3 t){vec2 q=vec2(l2(p.xy)-t.x,p.z*.5);return max(l8(q)-t.y,abs(p.z)-t.z);}
 const float nudge=.9;float nrm=1./sqrt(1.+nudge*nudge);
-float SN(vec3 p){float n=0.,it=2.;for(int i=0;i<8;i++){float w=sin(p.y*it)+cos(p.x*it);n+=-mix(w,abs(w),uRidge)/it;p.xy+=vec2(p.y,-p.x)*nudge;p.xy*=nrm;p.xz+=vec2(p.z,-p.x)*nudge;p.xz*=nrm;it*=1.733733;}return n;}
-float NN(vec3 p){return D(p.xzy,vec3(2,1.8,1.25))+F(p*uFbmFreq)*uFbmStr+SN(p.zxy*.5123+100.)*uSpiralStr;}
-float M(vec3 p){p.xz*=R(iTime*uSpinSpeed);return abs(NN(p/.5)*.5)+.07;}
-vec3 CC(float d,float r){vec3 res=mix(uColDense,uColThin,d);res*=mix(uCenterMul*uColCenter,uEdgeMul*uColEdge,min((r+.05)/.9,1.15));return res;}
+float SN(vec3 p){float n=0.,it=2.;for(int i=0;i<8;i++){float w=sin(p.y*it)+cos(p.x*it);n+=-mix(w,abs(w),cRidge)/it;p.xy+=vec2(p.y,-p.x)*nudge;p.xy*=nrm;p.xz+=vec2(p.z,-p.x)*nudge;p.xz*=nrm;it*=1.733733;}return n;}
+float M(vec3 p){p.xz*=R(iTime*uSpinSpeed);vec3 q=p/.5;
+float r=length(q.xy),h=abs(q.z);
+float cyl=max(r-uBeamRad*1.5,h-uBeamH*1.2);
+if(cyl>0.)return cyl+.2;
+float radial=max(1.-r/uBeamRad,0.);radial*=radial;
+float hf=1.-smoothstep(uBeamH*.5,uBeamH,h);
+float n=F(q*cFbmFreq)*cFbmStr;
+n+=SN(q.zxy*.5+100.)*cSpiralStr*.3;
+float dens=radial*hf*(.3+n)*uBeamDensity;
+return max(.1-dens*.1,.01);}
+vec3 CC(float d,float r){vec3 res=mix(cDense,cThin,d);res*=mix(cCenterMul*cCenter,cEdgeMul*cEdge,min((r+.05)/.9,1.15));return res;}
 bool RSI(vec3 o,vec3 d,out float n,out float f){float b=dot(d,o),c=dot(o,o)-8.,dl=b*b-c;if(dl<0.)return false;float ds=sqrt(dl);n=-b-ds;f=-b+ds;return f>0.;}
 void main(){vec2 fc=gl_FragCoord.xy;vec3 rd=normalize(vec3((fc-.5*iResolution)/iResolution.y,1));rd=uCamMat*rd;vec3 ro=uCamMat*vec3(uPanX,uPanY,uZoom);
 float ld=0.,td=0.,w=0.,d=1.,t=0.;const float h=.1;vec4 s=vec4(0);float mn=0.,mx=0.;
-if(RSI(ro,rd,mn,mx)){t=mn*step(t,mn);for(int i=0;i<64;i++){vec3 pos=ro+t*rd;if(td>.9||d<.1*t||t>10.||s.a>.99||t>mx)break;float d=max(M(pos),0.);vec3 ls=-pos;float lD=max(length(ls),.001);s.rgb+=uStarBri*(uColStar/(lD*lD*10.)/80.);s.rgb+=uBloom*(uColLight/exp(lD*lD*lD*.08)/30.);if(d<h){ld=h-d;w=(1.-td)*ld;td+=w+1./200.;vec4 c=vec4(CC(td,lD),td);s+=s.a*vec4(s.rgb,0)*.2;c.a*=.2;c.rgb*=c.a;s+=c*(1.-s.a);}td+=1./70.;vec2 uv=fc/iResolution;uv.y*=120.;uv.x*=280.;d=abs(d)*(.8+.08*texture(iChannel2,vec2(uv.y,-uv.x+.5*sin(4.*iTime+uv.y*4.))).r);t+=max(d*.1*max(min(length(ls),length(ro)),1.),.01);}s*=1./exp(ld*.2)*uBri;s=clamp(s,0.,1.);s.xyz=s.xyz*s.xyz*(3.-2.*s.xyz);s.xyz*=uOpacity;}
+if(RSI(ro,rd,mn,mx)){t=mn*step(t,mn);for(int i=0;i<64;i++){vec3 pos=ro+t*rd;if(td>.9||t>10.||s.a>.99||t>mx)break;float d=max(M(pos),0.);vec3 ls=-pos;float lD=max(length(ls),.001);s.rgb+=uStarBri*(uColStar/(lD*lD*10.)/80.);s.rgb+=uBloom*(uColLight/exp(lD*lD*lD*.08)/30.);if(d<h){ld=h-d;w=(1.-td)*ld;td+=w+1./200.;vec4 c=vec4(CC(td,lD),td);s+=s.a*vec4(s.rgb,0)*.2;c.a*=.2;c.rgb*=c.a;s+=c*(1.-s.a);}td+=1./70.;vec2 uv=fc/iResolution;uv.y*=120.;uv.x*=280.;d=abs(d)*(.8+.08*texture(iChannel2,vec2(uv.y,-uv.x+.5*sin(4.*iTime+uv.y*4.))).r);t+=max(d*.1*max(min(length(ls),length(ro)),1.),.02);}s*=1./exp(ld*.2)*uBri;s=clamp(s,0.,1.);s.xyz=s.xyz*s.xyz*(3.-2.*s.xyz);s.xyz*=uOpacity;}
 if(td<.8){vec3 st=vec3(N(rd*500.)*.5+.5);vec3 bg=mix(vec3(0),vec3(.8,.9,1),smoothstep(.99,1.,st)*clamp(dot(vec3(0),rd)+.75,0.,1.));s.xyz+=clamp(bg,0.,1.);}
 O=vec4(s.xyz,1);}`);
 const nebVAO=mkQVAO(nebProg);
-const nU={};['iResolution','iTime','iChannel0','iChannel2','uZoom','uPanX','uPanY','uCamMat','uColDense','uColThin','uColCenter','uColEdge','uColStar','uColLight','uCenterMul','uEdgeMul','uStarBri','uBloom','uBri','uOpacity','uRidge','uSpiralStr','uFbmFreq','uFbmStr','uSpinSpeed'].forEach(n=>nU[n]=gl.getUniformLocation(nebProg,n));
+const nU={};['iResolution','iTime','iChannel0','iChannel2','uZoom','uPanX','uPanY','uCamMat','uColStar','uColLight','uStarBri','uBloom','uBri','uOpacity','uSpinSpeed','uBeamRad','uBeamH','uBeamDensity'].forEach(n=>nU[n]=gl.getUniformLocation(nebProg,n));
 
 // Store random seeds per node — angle placed within the node's region sector
 const nodeSeeds=[];
@@ -732,9 +734,10 @@ gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,noiseTex);gl.uniform1
 gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,ditherTex);gl.uniform1i(nU.iChannel2,1);
 gl.uniform2f(nU.iResolution,W,H);gl.uniform1f(nU.iTime,t);gl.uniformMatrix3fv(nU.uCamMat,false,camF);
 gl.uniform1f(nU.uZoom,zoom);gl.uniform1f(nU.uPanX,panX);gl.uniform1f(nU.uPanY,panY);
-let cd=gc('cDense'),ct=gc('cThin'),cc=gc('cCenter'),ce=gc('cEdge'),cs=gc('cStar'),cl=gc('cLight');
-gl.uniform3f(nU.uColDense,...cd);gl.uniform3f(nU.uColThin,...ct);gl.uniform3f(nU.uColCenter,...cc);gl.uniform3f(nU.uColEdge,...ce);gl.uniform3f(nU.uColStar,...cs);gl.uniform3f(nU.uColLight,...cl);
-gl.uniform1f(nU.uCenterMul,gv('rCenterMul'));gl.uniform1f(nU.uEdgeMul,gv('rEdgeMul'));gl.uniform1f(nU.uStarBri,gv('rStarBri'));gl.uniform1f(nU.uBloom,gv('rBloom'));gl.uniform1f(nU.uBri,gv('rBri'));gl.uniform1f(nU.uOpacity,gv('rOpacity'));gl.uniform1f(nU.uRidge,gv('rRidge'));gl.uniform1f(nU.uSpiralStr,gv('rSpiral'));gl.uniform1f(nU.uFbmFreq,gv('rFbmFreq'));gl.uniform1f(nU.uFbmStr,gv('rFbmStr'));gl.uniform1f(nU.uSpinSpeed,ss);
+let cs=gc('cStar'),cl=gc('cLight');
+gl.uniform3f(nU.uColStar,...cs);gl.uniform3f(nU.uColLight,...cl);
+gl.uniform1f(nU.uStarBri,gv('rStarBri'));gl.uniform1f(nU.uBloom,gv('rBloom'));gl.uniform1f(nU.uBri,gv('rBri'));gl.uniform1f(nU.uOpacity,gv('rOpacity'));gl.uniform1f(nU.uSpinSpeed,ss);
+gl.uniform1f(nU.uBeamRad,gv('rBeamRad'));gl.uniform1f(nU.uBeamH,gv('rBeamH'));gl.uniform1f(nU.uBeamDensity,gv('rBeamDensity'));
 gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
 
 gl.enable(gl.BLEND);gl.blendFunc(gl.ONE,gl.ONE);
