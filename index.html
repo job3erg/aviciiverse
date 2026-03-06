@@ -39,45 +39,29 @@ canvas{display:block;width:100vw;height:100vh}
 <body>
 <canvas id="c"></canvas>
 <div id="sidebar">
-  <div class="pane-header" data-pane="pNebula"><span>Energy beam</span><span class="arrow">&#9654;</span></div>
+  <div class="pane-header" data-pane="pNebula"><span>Nebula</span><span class="arrow">&#9654;</span></div>
   <div class="pane-body" id="pNebula">
+    <div class="section">Surface</div>
+    <label>Dense <input type="color" id="cDense" value="#888899"></label>
+    <label>Thin <input type="color" id="cThin" value="#aaaabb"></label>
+    <div class="section">Illumination</div>
+    <label>Center <input type="color" id="cCenter" value="#ccffff"></label>
+    <label>Center mul <input type="range" id="rCenterMul" min="0" max="15" step="0.1" value="7"><span class="val" id="vCenterMul">7</span></label>
+    <label>Edge <input type="color" id="cEdge" value="#7a8780"></label>
+    <label>Edge mul <input type="range" id="rEdgeMul" min="0" max="5" step="0.1" value="0"><span class="val" id="vEdgeMul">0</span></label>
     <div class="section">Point Light</div>
     <label>Star color <input type="color" id="cStar" value="#7788cc"></label>
     <label>Star brightness <input type="range" id="rStarBri" min="0" max="5" step="0.05" value="0"><span class="val" id="vStarBri">0</span></label>
     <label>Light color <input type="color" id="cLight" value="#5588bb"></label>
-    <label>Bloom strength <input type="range" id="rBloom" min="0" max="5" step="0.05" value="3.45"><span class="val" id="vBloom">3.45</span></label>
-    <div class="section">Beam</div>
-    <label>Radius <input type="range" id="rBeamRad" min="0" max="2" step="0.01" value="0"><span class="val" id="vBeamRad">0</span></label>
-    <label>Height <input type="range" id="rBeamH" min="0" max="5" step="0.1" value="5"><span class="val" id="vBeamH">5</span></label>
-    <label>Dissolve <input type="range" id="rBeamDensity" min="0" max="2" step="0.05" value="2"><span class="val" id="vBeamDensity">2</span></label>
+    <label>Bloom strength <input type="range" id="rBloom" min="0" max="5" step="0.05" value="1.55"><span class="val" id="vBloom">1.55</span></label>
+    <div class="section">Detail</div>
+    <label>Ridged <input type="range" id="rRidge" min="0" max="3" step="0.01" value="1.8"><span class="val" id="vRidge">1.8</span></label>
+    <label>Spiral strength <input type="range" id="rSpiral" min="0" max="6" step="0.1" value="6"><span class="val" id="vSpiral">6</span></label>
+    <label>FBM frequency <input type="range" id="rFbmFreq" min="10" max="150" step="1" value="10"><span class="val" id="vFbmFreq">10</span></label>
+    <label>FBM strength <input type="range" id="rFbmStr" min="0" max="3" step="0.05" value="0.2"><span class="val" id="vFbmStr">0.2</span></label>
     <div class="section">Tone</div>
-    <label>Brightness <input type="range" id="rBri" min="0.1" max="1.5" step="0.01" value="0.13"><span class="val" id="vBri">0.13</span></label>
+    <label>Brightness <input type="range" id="rBri" min="0.1" max="1.5" step="0.01" value="0.45"><span class="val" id="vBri">0.45</span></label>
     <label>Opacity <input type="range" id="rOpacity" min="0.05" max="1" step="0.01" value="1"><span class="val" id="vOpacity">1</span></label>
-  </div>
-  <div class="pane-header" data-pane="pEffects"><span>Effects</span><span class="arrow">&#9654;</span></div>
-  <div class="pane-body" id="pEffects">
-    <div class="section">Caustics</div>
-    <label>Enable <input type="checkbox" id="chkCaustic" checked></label>
-    <label>Strength <input type="range" id="rCausticStr" min="0" max="2" step="0.05" value="0.5"><span class="val" id="vCausticStr">0.5</span></label>
-    <label>Scale <input type="range" id="rCausticScale" min="1" max="30" step="0.5" value="12"><span class="val" id="vCausticScale">12</span></label>
-    <label>Speed <input type="range" id="rCausticSpeed" min="0" max="3" step="0.05" value="0.8"><span class="val" id="vCausticSpeed">0.8</span></label>
-    <div class="section">Shimmer</div>
-    <label>Enable <input type="checkbox" id="chkShimmer" checked></label>
-    <label>Strength <input type="range" id="rShimmerStr" min="0" max="0.3" step="0.005" value="0.08"><span class="val" id="vShimmerStr">0.08</span></label>
-    <label>Speed <input type="range" id="rShimmerSpeed" min="0" max="5" step="0.1" value="2"><span class="val" id="vShimmerSpeed">2</span></label>
-    <div class="section">Scrolling Noise</div>
-    <label>Enable <input type="checkbox" id="chkScroll" checked></label>
-    <label>Strength <input type="range" id="rScrollStr" min="0" max="2" step="0.05" value="0.7"><span class="val" id="vScrollStr">0.7</span></label>
-    <label>Speed <input type="range" id="rScrollSpeed" min="0" max="2" step="0.05" value="0.3"><span class="val" id="vScrollSpeed">0.3</span></label>
-    <div class="section">Anamorphic Streak</div>
-    <label>Enable <input type="checkbox" id="chkStreak" checked></label>
-    <label>Strength <input type="range" id="rStreakStr" min="0" max="3" step="0.05" value="1"><span class="val" id="vStreakStr">1</span></label>
-    <label>Spread <input type="range" id="rStreakSpread" min="1" max="60" step="1" value="20"><span class="val" id="vStreakSpread">20</span></label>
-    <div class="section">Beam Particles</div>
-    <label>Enable <input type="checkbox" id="chkPart" checked></label>
-    <label>Count <input type="range" id="rPartCount" min="0" max="1000" step="10" value="300"><span class="val" id="vPartCount">300</span></label>
-    <label>Speed <input type="range" id="rPartSpeed" min="0" max="2" step="0.05" value="0.4"><span class="val" id="vPartSpeed">0.4</span></label>
-    <label>Size <input type="range" id="rPartSize" min="0.1" max="3" step="0.05" value="0.8"><span class="val" id="vPartSize">0.8</span></label>
   </div>
   <div class="pane-header" data-pane="pShape"><span>Shape</span><span class="arrow">&#9654;</span></div>
   <div class="pane-body" id="pShape">
@@ -91,8 +75,9 @@ canvas{display:block;width:100vw;height:100vh}
     <div class="section">Controls</div>
     <label>Sensitivity <input type="range" id="rCamSens" min="0" max="10" step="0.1" value="2"><span class="val" id="vCamSens">2</span></label>
     <label>Zoom sensitivity <input type="range" id="rZoomSens" min="0" max="10" step="0.1" value="3"><span class="val" id="vZoomSens">3</span></label>
-    <div class="section">Rotation</div>
-    <label>Spin speed <input type="range" id="rSpinSpeed" min="0" max="1" step="0.01" value="0"><span class="val" id="vSpinSpeed">0</span></label>
+    <div class="section">Zoom Limits</div>
+    <label>Closest <input type="range" id="rZoomClose" min="-5" max="-1" step="0.1" value="-1.5"><span class="val" id="vZoomClose">-1.5</span></label>
+    <label>Farthest <input type="range" id="rZoomFar" min="-20" max="-3" step="0.5" value="-5"><span class="val" id="vZoomFar">-5</span></label>
   </div>
   <div class="pane-header" data-pane="pNodes"><span>Nodes</span><span class="arrow">&#9654;</span></div>
   <div class="pane-body" id="pNodes">
@@ -245,14 +230,8 @@ in vec2 p;void main(){gl_Position=vec4(p,0,1);}`,
 precision highp float;
 uniform vec2 iResolution;uniform float iTime;uniform sampler2D iChannel0,iChannel2;
 uniform float uZoom,uPanX,uPanY;uniform mat3 uCamMat;
-uniform vec3 uColStar,uColLight;
-uniform float uStarBri,uBloom,uBri,uOpacity,uSpinSpeed;
-uniform float uBeamRad,uBeamH,uBeamDensity;
-uniform float uCausticOn,uCausticStr,uCausticScale,uCausticSpeed;
-uniform float uShimmerOn,uShimmerStr,uShimmerSpeed;
-uniform float uScrollOn,uScrollStr,uScrollSpeed;
-const vec3 cDense=vec3(.53,.53,.6),cThin=vec3(.67,.67,.73),cCenter=vec3(.8,1.,1.),cEdge=vec3(.48,.53,.5);
-const float cCenterMul=7.,cEdgeMul=0.,cRidge=1.97,cSpiralStr=3.5,cFbmFreq=75.,cFbmStr=1.3;
+uniform vec3 uColDense,uColThin,uColCenter,uColEdge,uColStar,uColLight;
+uniform float uCenterMul,uEdgeMul,uStarBri,uBloom,uBri,uOpacity,uRidge,uSpiralStr,uFbmFreq,uFbmStr,uSpinSpeed;
 out vec4 O;
 mat2 R(float a){float c=cos(a),s=sin(a);return mat2(c,-s,s,c);}
 float N(vec3 x){vec3 p=floor(x),f=fract(x);f=f*f*(3.-2.*f);vec2 u=(p.xy+vec2(37,17)*p.z)+f.xy;vec2 r=texture(iChannel0,(u+.5)/256.).yx;return 1.-.82*mix(r.x,r.y,f.z);}
@@ -261,115 +240,18 @@ float l2(vec2 p){return sqrt(p.x*p.x+p.y*p.y);}
 float l8(vec2 p){p=p*p;p=p*p;p=p*p;return pow(p.x+p.y,1./8.);}
 float D(vec3 p,vec3 t){vec2 q=vec2(l2(p.xy)-t.x,p.z*.5);return max(l8(q)-t.y,abs(p.z)-t.z);}
 const float nudge=.9;float nrm=1./sqrt(1.+nudge*nudge);
-float SN(vec3 p){float n=0.,it=2.;for(int i=0;i<8;i++){float w=sin(p.y*it)+cos(p.x*it);n+=-mix(w,abs(w),cRidge)/it;p.xy+=vec2(p.y,-p.x)*nudge;p.xy*=nrm;p.xz+=vec2(p.z,-p.x)*nudge;p.xz*=nrm;it*=1.733733;}return n;}
-float caustic(vec3 p,float t){
-  float s=uCausticScale;float sp=t*uCausticSpeed;
-  vec2 u0=p.xz*s+sp;
-  vec2 u1=p.xz*s*R(.4)+sp*1.3+7.;
-  vec2 u2=p.xz*s*R(-.7)+sp*.7+13.;
-  float c=sin(u0.x)*sin(u0.y)+sin(u1.x)*sin(u1.y)+sin(u2.x)*sin(u2.y);
-  return c*c*.111;}
-float M(vec3 p){p.xz*=R(iTime*uSpinSpeed);vec3 q=p/.5;
-float r=length(q.xy),h=abs(q.z);
-float cyl=max(r-uBeamRad*1.5,h-uBeamH*1.2);
-if(cyl>0.)return cyl+.2;
-float radial=max(1.-r/uBeamRad,0.);radial*=radial;
-float hf=1.-smoothstep(uBeamH*.5,uBeamH,h);
-float n=F(q*cFbmFreq)*cFbmStr;
-n+=SN(q.zxy*.5+100.)*cSpiralStr*.3;
-if(uScrollOn>.5){n+=F((q+vec3(0,0,iTime*uScrollSpeed))*cFbmFreq*.7)*uScrollStr*.5;
-n+=F((q+vec3(0,0,-iTime*uScrollSpeed*1.7+5.))*cFbmFreq*.4)*uScrollStr*.3;}
-float dens=radial*hf*(.3+n)*uBeamDensity;
-return max(.1-dens*.1,.01);}
-vec3 CC(float d,float r){vec3 res=mix(cDense,cThin,d);res*=mix(cCenterMul*cCenter,cEdgeMul*cEdge,min((r+.05)/.9,1.15));return res;}
+float SN(vec3 p){float n=0.,it=2.;for(int i=0;i<8;i++){float w=sin(p.y*it)+cos(p.x*it);n+=-mix(w,abs(w),uRidge)/it;p.xy+=vec2(p.y,-p.x)*nudge;p.xy*=nrm;p.xz+=vec2(p.z,-p.x)*nudge;p.xz*=nrm;it*=1.733733;}return n;}
+float NN(vec3 p){return D(p.xzy,vec3(2,1.8,1.25))+F(p*uFbmFreq)*uFbmStr+SN(p.zxy*.5123+100.)*uSpiralStr;}
+float M(vec3 p){p.xz*=R(iTime*uSpinSpeed);return abs(NN(p/.5)*.5)+.07;}
+vec3 CC(float d,float r){vec3 res=mix(uColDense,uColThin,d);res*=mix(uCenterMul*uColCenter,uEdgeMul*uColEdge,min((r+.05)/.9,1.15));return res;}
 bool RSI(vec3 o,vec3 d,out float n,out float f){float b=dot(d,o),c=dot(o,o)-8.,dl=b*b-c;if(dl<0.)return false;float ds=sqrt(dl);n=-b-ds;f=-b+ds;return f>0.;}
 void main(){vec2 fc=gl_FragCoord.xy;vec3 rd=normalize(vec3((fc-.5*iResolution)/iResolution.y,1));rd=uCamMat*rd;vec3 ro=uCamMat*vec3(uPanX,uPanY,uZoom);
 float ld=0.,td=0.,w=0.,d=1.,t=0.;const float h=.1;vec4 s=vec4(0);float mn=0.,mx=0.;
-if(RSI(ro,rd,mn,mx)){t=mn*step(t,mn);for(int i=0;i<64;i++){vec3 pos=ro+t*rd;
-if(uShimmerOn>.5){float sh=uShimmerStr;pos.x+=sin(pos.z*8.+iTime*uShimmerSpeed)*sh;pos.y+=cos(pos.z*6.+iTime*uShimmerSpeed*1.3+2.)*sh;pos.z+=sin(pos.x*7.+iTime*uShimmerSpeed*.9+5.)*sh*.5;}
-if(td>.9||t>10.||s.a>.99||t>mx)break;float d=max(M(pos),0.);vec3 ls=-pos;float lD=max(length(ls),.001);s.rgb+=uStarBri*(uColStar/(lD*lD*10.)/80.);s.rgb+=uBloom*(uColLight/exp(lD*lD*lD*.08)/30.);if(d<h){ld=h-d;w=(1.-td)*ld;td+=w+1./200.;vec4 c=vec4(CC(td,lD),td);
-if(uCausticOn>.5){float ca=caustic(pos,iTime);c.rgb+=c.rgb*ca*uCausticStr*2.;}
-s+=s.a*vec4(s.rgb,0)*.2;c.a*=.2;c.rgb*=c.a;s+=c*(1.-s.a);}td+=1./70.;vec2 uv=fc/iResolution;uv.y*=120.;uv.x*=280.;d=abs(d)*(.8+.08*texture(iChannel2,vec2(uv.y,-uv.x+.5*sin(4.*iTime+uv.y*4.))).r);t+=max(d*.1*max(min(length(ls),length(ro)),1.),.02);}s*=1./exp(ld*.2)*uBri;s=clamp(s,0.,1.);s.xyz=s.xyz*s.xyz*(3.-2.*s.xyz);s.xyz*=uOpacity;}
+if(RSI(ro,rd,mn,mx)){t=mn*step(t,mn);for(int i=0;i<64;i++){vec3 pos=ro+t*rd;if(td>.9||d<.1*t||t>10.||s.a>.99||t>mx)break;float d=max(M(pos),0.);vec3 ls=-pos;float lD=max(length(ls),.001);s.rgb+=uStarBri*(uColStar/(lD*lD*10.)/80.);s.rgb+=uBloom*(uColLight/exp(lD*lD*lD*.08)/30.);if(d<h){ld=h-d;w=(1.-td)*ld;td+=w+1./200.;vec4 c=vec4(CC(td,lD),td);s+=s.a*vec4(s.rgb,0)*.2;c.a*=.2;c.rgb*=c.a;s+=c*(1.-s.a);}td+=1./70.;vec2 uv=fc/iResolution;uv.y*=120.;uv.x*=280.;d=abs(d)*(.8+.08*texture(iChannel2,vec2(uv.y,-uv.x+.5*sin(4.*iTime+uv.y*4.))).r);t+=max(d*.1*max(min(length(ls),length(ro)),1.),.01);}s*=1./exp(ld*.2)*uBri;s=clamp(s,0.,1.);s.xyz=s.xyz*s.xyz*(3.-2.*s.xyz);s.xyz*=uOpacity;}
 if(td<.8){vec3 st=vec3(N(rd*500.)*.5+.5);vec3 bg=mix(vec3(0),vec3(.8,.9,1),smoothstep(.99,1.,st)*clamp(dot(vec3(0),rd)+.75,0.,1.));s.xyz+=clamp(bg,0.,1.);}
 O=vec4(s.xyz,1);}`);
 const nebVAO=mkQVAO(nebProg);
-const nU={};['iResolution','iTime','iChannel0','iChannel2','uZoom','uPanX','uPanY','uCamMat','uColStar','uColLight','uStarBri','uBloom','uBri','uOpacity','uSpinSpeed','uBeamRad','uBeamH','uBeamDensity','uCausticOn','uCausticStr','uCausticScale','uCausticSpeed','uShimmerOn','uShimmerStr','uShimmerSpeed','uScrollOn','uScrollStr','uScrollSpeed'].forEach(n=>nU[n]=gl.getUniformLocation(nebProg,n));
-
-// --- Post-process FBO for anamorphic streak ---
-let fboW=canvas.width,fboH=canvas.height;
-const sceneTex=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,sceneTex);
-gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA16F,fboW,fboH,0,gl.RGBA,gl.FLOAT,null);
-gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
-gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
-const sceneFBO=gl.createFramebuffer();gl.bindFramebuffer(gl.FRAMEBUFFER,sceneFBO);
-gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,sceneTex,0);
-gl.bindFramebuffer(gl.FRAMEBUFFER,null);
-function resizeFBO(){
-  fboW=canvas.width;fboH=canvas.height;
-  gl.bindTexture(gl.TEXTURE_2D,sceneTex);
-  gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA16F,fboW,fboH,0,gl.RGBA,gl.FLOAT,null);
-}
-
-const postProg=link(`#version 300 es
-in vec2 p;out vec2 vUV;void main(){vUV=p*.5+.5;gl_Position=vec4(p,0,1);}`,
-`#version 300 es
-precision highp float;
-uniform sampler2D uScene;uniform vec2 uRes;
-uniform float uStreakOn,uStreakStr,uStreakSpread;
-in vec2 vUV;out vec4 O;
-void main(){vec4 col=texture(uScene,vUV);
-if(uStreakOn>.5){
-  vec3 streak=vec3(0);float tw=0.;
-  float px=1./uRes.x;
-  for(float i=-10.;i<=10.;i+=1.){
-    float w=exp(-abs(i)*abs(i)/(uStreakSpread*2.));
-    vec4 s=texture(uScene,vUV+vec2(i*px*uStreakSpread*.5,0));
-    float lum=dot(s.rgb,vec3(.2126,.7152,.0722));
-    float bright=max(lum-.3,0.)*2.;
-    streak+=s.rgb*bright*w;tw+=w;
-  }
-  streak/=tw;col.rgb+=streak*uStreakStr;
-}
-O=vec4(col.rgb,1);}`);
-const postVAO=mkQVAO(postProg);
-const pU={};['uScene','uRes','uStreakOn','uStreakStr','uStreakSpread'].forEach(n=>pU[n]=gl.getUniformLocation(postProg,n));
-
-// --- Beam particles ---
-const BEAM_PART_MAX=1000;
-const beamPartPos=new Float32Array(BEAM_PART_MAX*3);
-const beamPartLife=new Float32Array(BEAM_PART_MAX);
-const beamPartSz=new Float32Array(BEAM_PART_MAX);
-for(let i=0;i<BEAM_PART_MAX;i++){
-  beamPartLife[i]=Math.random();
-  beamPartSz[i]=.5+Math.random()*1.5;
-  let a=Math.random()*Math.PI*2,r=Math.random()*.3;
-  beamPartPos[i*3]=Math.cos(a)*r;beamPartPos[i*3+1]=Math.sin(a)*r;
-  beamPartPos[i*3+2]=(beamPartLife[i]-.5)*4.;
-}
-const beamPartProg=link(`#version 300 es
-uniform mat3 uCam,uSpin;uniform vec3 uOrigin;uniform vec2 uRes;
-uniform float uPartSize;
-in vec3 aPos;in float aSize;out float vAlpha;
-void main(){vec3 s=uSpin*aPos,w=s-uOrigin;
-vec3 c=vec3(uCam[0][0]*w.x+uCam[0][1]*w.y+uCam[0][2]*w.z,uCam[1][0]*w.x+uCam[1][1]*w.y+uCam[1][2]*w.z,uCam[2][0]*w.x+uCam[2][1]*w.y+uCam[2][2]*w.z);
-if(c.z<.01){gl_Position=vec4(2);gl_PointSize=0.;return;}
-vec2 px=c.xy/c.z*uRes.y+.5*uRes,nd=px/uRes*2.-1.;
-gl_Position=vec4(nd,0,1);float d=length(w);
-gl_PointSize=clamp(aSize*uPartSize*uRes.y/(d*120.+1.),.5,30.);
-vAlpha=1./(1.+d*.1);}`,
-`#version 300 es
-precision highp float;uniform vec3 uPartColor;
-in float vAlpha;out vec4 O;
-void main(){float r=length(gl_PointCoord-.5)*2.;
-float a=exp(-r*r*3.)*vAlpha;
-if(a<.003)discard;
-O=vec4(uPartColor*a,1);}`);
-const beamPartVAO=gl.createVertexArray();gl.bindVertexArray(beamPartVAO);
-const bpPosBuf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,bpPosBuf);gl.bufferData(gl.ARRAY_BUFFER,beamPartPos,gl.DYNAMIC_DRAW);
-const bpPosLoc=gl.getAttribLocation(beamPartProg,'aPos');gl.enableVertexAttribArray(bpPosLoc);gl.vertexAttribPointer(bpPosLoc,3,gl.FLOAT,false,0,0);
-const bpSzBuf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,bpSzBuf);gl.bufferData(gl.ARRAY_BUFFER,beamPartSz,gl.STATIC_DRAW);
-const bpSzLoc=gl.getAttribLocation(beamPartProg,'aSize');gl.enableVertexAttribArray(bpSzLoc);gl.vertexAttribPointer(bpSzLoc,1,gl.FLOAT,false,0,0);
-const bpU={};['uCam','uSpin','uOrigin','uRes','uPartSize','uPartColor'].forEach(n=>bpU[n]=gl.getUniformLocation(beamPartProg,n));
+const nU={};['iResolution','iTime','iChannel0','iChannel2','uZoom','uPanX','uPanY','uCamMat','uColDense','uColThin','uColCenter','uColEdge','uColStar','uColLight','uCenterMul','uEdgeMul','uStarBri','uBloom','uBri','uOpacity','uRidge','uSpiralStr','uFbmFreq','uFbmStr','uSpinSpeed'].forEach(n=>nU[n]=gl.getUniformLocation(nebProg,n));
 
 // Store random seeds per node — angle placed within the node's region sector
 const nodeSeeds=[];
@@ -814,7 +696,7 @@ function updateRegionLabels(camF,spinF,ox,oy,oz,W,H,dim){
 }
 
 let t0=performance.now()/1000;
-function resize(){const d=Math.min(devicePixelRatio,1.5);canvas.width=innerWidth*d;canvas.height=innerHeight*d;canvas.style.width=innerWidth+'px';canvas.style.height=innerHeight+'px';gl.viewport(0,0,canvas.width,canvas.height);resizeFBO();}
+function resize(){const d=Math.min(devicePixelRatio,1.5);canvas.width=innerWidth*d;canvas.height=innerHeight*d;canvas.style.width=innerWidth+'px';canvas.style.height=innerHeight+'px';gl.viewport(0,0,canvas.width,canvas.height);}
 addEventListener('resize',resize);resize();
 
 function frame(){try{
@@ -824,9 +706,9 @@ velZoom*=ZOOM_DAMP;
 camAz+=velAz;camEl+=velEl;camEl=Math.max(-1.5,Math.min(1.5,camEl));
 cam=buildCam(camAz,camEl);
 panX+=velPanX;panY+=velPanY;
-zoom+=velZoom;zoom=Math.max(-10,Math.min(-2,zoom));
+zoom+=velZoom;zoom=Math.max(gv('rZoomFar'),Math.min(gv('rZoomClose'),zoom));
 let ox=cam[0]*panX+cam[3]*panY+cam[6]*zoom,oy=cam[1]*panX+cam[4]*panY+cam[7]*zoom,oz=cam[2]*panX+cam[5]*panY+cam[8]*zoom;
-let sr=gv('rSpinSpeed'),ss=sr*sr*.2,sa=t*ss,csa=Math.cos(sa),sna=Math.sin(sa),spin=[csa,0,-sna,0,1,0,sna,0,csa];
+let ss=0,sa=0,csa=1,sna=0,spin=[1,0,0,0,1,0,0,0,1];
 const camF=new Float32Array(cam),spinF=new Float32Array(spin);
 updateRegionHover(camF,spinF,ox,oy,oz,W,H);
 // Animate node rise/glow for selected region
@@ -845,47 +727,18 @@ if(dirty){gl.bindBuffer(gl.ARRAY_BUFFER,nodeAnimBuf);gl.bufferData(gl.ARRAY_BUFF
 const dimTgt=selectedRegion>=0?gv('rDimOthers'):1;
 curDim+=(dimTgt-curDim)*.08;
 const dimVal=curDim;
-const streakOn=document.getElementById('chkStreak').checked;
-gl.disable(gl.BLEND);
-if(streakOn){gl.bindFramebuffer(gl.FRAMEBUFFER,sceneFBO);}else{gl.bindFramebuffer(gl.FRAMEBUFFER,null);}
-gl.viewport(0,0,W,H);gl.clearColor(0,0,0,1);gl.clear(gl.COLOR_BUFFER_BIT);
+gl.disable(gl.BLEND);gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.viewport(0,0,W,H);
 gl.useProgram(nebProg);gl.bindVertexArray(nebVAO);
 gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,noiseTex);gl.uniform1i(nU.iChannel0,0);
 gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,ditherTex);gl.uniform1i(nU.iChannel2,1);
 gl.uniform2f(nU.iResolution,W,H);gl.uniform1f(nU.iTime,t);gl.uniformMatrix3fv(nU.uCamMat,false,camF);
 gl.uniform1f(nU.uZoom,zoom);gl.uniform1f(nU.uPanX,panX);gl.uniform1f(nU.uPanY,panY);
-let cs=gc('cStar'),cl=gc('cLight');
-gl.uniform3f(nU.uColStar,...cs);gl.uniform3f(nU.uColLight,...cl);
-gl.uniform1f(nU.uStarBri,gv('rStarBri'));gl.uniform1f(nU.uBloom,gv('rBloom'));gl.uniform1f(nU.uBri,gv('rBri'));gl.uniform1f(nU.uOpacity,gv('rOpacity'));gl.uniform1f(nU.uSpinSpeed,ss);
-gl.uniform1f(nU.uBeamRad,gv('rBeamRad'));gl.uniform1f(nU.uBeamH,gv('rBeamH'));gl.uniform1f(nU.uBeamDensity,gv('rBeamDensity'));
-gl.uniform1f(nU.uCausticOn,document.getElementById('chkCaustic').checked?1:0);
-gl.uniform1f(nU.uCausticStr,gv('rCausticStr'));gl.uniform1f(nU.uCausticScale,gv('rCausticScale'));gl.uniform1f(nU.uCausticSpeed,gv('rCausticSpeed'));
-gl.uniform1f(nU.uShimmerOn,document.getElementById('chkShimmer').checked?1:0);
-gl.uniform1f(nU.uShimmerStr,gv('rShimmerStr'));gl.uniform1f(nU.uShimmerSpeed,gv('rShimmerSpeed'));
-gl.uniform1f(nU.uScrollOn,document.getElementById('chkScroll').checked?1:0);
-gl.uniform1f(nU.uScrollStr,gv('rScrollStr'));gl.uniform1f(nU.uScrollSpeed,gv('rScrollSpeed'));
+let cd=gc('cDense'),ct=gc('cThin'),cc=gc('cCenter'),ce=gc('cEdge'),cs=gc('cStar'),cl=gc('cLight');
+gl.uniform3f(nU.uColDense,...cd);gl.uniform3f(nU.uColThin,...ct);gl.uniform3f(nU.uColCenter,...cc);gl.uniform3f(nU.uColEdge,...ce);gl.uniform3f(nU.uColStar,...cs);gl.uniform3f(nU.uColLight,...cl);
+gl.uniform1f(nU.uCenterMul,gv('rCenterMul'));gl.uniform1f(nU.uEdgeMul,gv('rEdgeMul'));gl.uniform1f(nU.uStarBri,gv('rStarBri'));gl.uniform1f(nU.uBloom,gv('rBloom'));gl.uniform1f(nU.uBri,gv('rBri'));gl.uniform1f(nU.uOpacity,gv('rOpacity'));gl.uniform1f(nU.uRidge,gv('rRidge'));gl.uniform1f(nU.uSpiralStr,gv('rSpiral'));gl.uniform1f(nU.uFbmFreq,gv('rFbmFreq'));gl.uniform1f(nU.uFbmStr,gv('rFbmStr'));gl.uniform1f(nU.uSpinSpeed,ss);
 gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
 
-// Beam particles
 gl.enable(gl.BLEND);gl.blendFunc(gl.ONE,gl.ONE);
-if(document.getElementById('chkPart').checked){
-  const partCount=Math.min(gv('rPartCount')|0,BEAM_PART_MAX);
-  const partSpeed=gv('rPartSpeed'),beamR=gv('rBeamRad'),beamH=gv('rBeamH');
-  const dt=1/60;
-  for(let i=0;i<partCount;i++){
-    beamPartLife[i]+=dt*partSpeed*.2;
-    if(beamPartLife[i]>1){beamPartLife[i]-=1;let a=Math.random()*Math.PI*2,r=Math.random()*Math.max(beamR,.3);beamPartPos[i*3]=Math.cos(a)*r;beamPartPos[i*3+1]=Math.sin(a)*r;}
-    beamPartPos[i*3+2]=(beamPartLife[i]-.5)*beamH*2.;
-  }
-  gl.bindBuffer(gl.ARRAY_BUFFER,bpPosBuf);gl.bufferData(gl.ARRAY_BUFFER,beamPartPos,gl.DYNAMIC_DRAW);
-  gl.useProgram(beamPartProg);gl.bindVertexArray(beamPartVAO);
-  gl.uniformMatrix3fv(bpU.uCam,false,camF);gl.uniform3f(bpU.uOrigin,ox,oy,oz);gl.uniform2f(bpU.uRes,W,H);gl.uniformMatrix3fv(bpU.uSpin,false,spinF);
-  gl.uniform1f(bpU.uPartSize,gv('rPartSize'));
-  let pc=gc('cLight');gl.uniform3f(bpU.uPartColor,...pc);
-  gl.drawArrays(gl.POINTS,0,partCount);
-}
-
-gl.blendFunc(gl.ONE,gl.ONE);
 if(fillCount>0){
 gl.useProgram(fillProg);gl.bindVertexArray(fillVAO);
 gl.uniformMatrix3fv(flU.uCam,false,camF);gl.uniform3f(flU.uOrigin,ox,oy,oz);gl.uniform2f(flU.uRes,W,H);gl.uniformMatrix3fv(flU.uSpin,false,spinF);
@@ -962,16 +815,6 @@ let nodeCol=gc('cNodeColor'),glowCol=gc('cGlowColor');
 gl.uniform3f(ndU.uNodeColor,...nodeCol);
 gl.uniform3f(ndU.uGlowColor,...glowCol);
 gl.drawArrays(gl.POINTS,0,NUM_SP);gl.disable(gl.BLEND);
-// Post-process: anamorphic streak
-if(streakOn){
-  gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.viewport(0,0,W,H);
-  gl.disable(gl.BLEND);
-  gl.useProgram(postProg);gl.bindVertexArray(postVAO);
-  gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,sceneTex);gl.uniform1i(pU.uScene,0);
-  gl.uniform2f(pU.uRes,W,H);
-  gl.uniform1f(pU.uStreakOn,1);gl.uniform1f(pU.uStreakStr,gv('rStreakStr'));gl.uniform1f(pU.uStreakSpread,gv('rStreakSpread'));
-  gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
-}
 updateCard();
 updateRegionLabels(camF,spinF,ox,oy,oz,W,H,dimVal);
 }catch(e){}
